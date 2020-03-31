@@ -17,7 +17,7 @@ module.exports = {
         return response.json(res);
     },
 
-    async post(request, response) {
+    async login(request, response) {
         let data = null
 
         try {
