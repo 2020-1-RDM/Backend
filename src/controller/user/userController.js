@@ -1,6 +1,8 @@
 import admin from '../../database/connection';
+require('dotenv').config();
 
 const db = admin.firestore();
+const jwt = require("jsonwebtoken");
 module.exports = {
 
     async get(request, response) {
@@ -17,25 +19,42 @@ module.exports = {
         return response.json(res);
     },
 
+
     async login(request, response) {
-        let data = null
         try {
+
             let { user, password } = request.body;
-            if(user === null || password === null){
-                return response.status(404).json({"error": "Não foram enviados os dados.Favor, preencher com dados."});
+
+            if(!user || !password){
+
+                return response.status(404).json({"error": "Não foram enviados os dados."});
+                
             }
-            await db.collection('user').where("usuario","==",user).where("password", "==", password).get().then((snapshot) => {
-                snapshot.forEach(
-                    (res) => {data = res.data()}
-                )
+            let userCollection = db.collection('user')
+            let result = null
+            await userCollection.where("usuario","==",user).where("password", "==", password).get().then(
+                (snapshot) => {
+                    return snapshot.forEach(
+                        (res) => {  result = res.data()}
+                    )
             });
-            if(data === null){
-                return response.status(401).json({"error": "Usuário inexistente/Senha inválida!"});
+
+            if(!result){
+                return response.status(401).json({"error": "Erro de autenticação!"});
             }
-            return response.status(200).json(data);
+            let token = jwt.sign({
+                'cpf' : result['cpf'],
+                'email' : result['email']
+
+            }, process.env.JWT_KEY, {
+                expiresIn : '1h'
+            });
+
+            return response.status(200).json({'token' : token});
+
         }
-        catch{
-            return response.status(500).json({"error": "Erro durante o processamento do login. Espere um momento e tente novamente!"});
+        catch(e){
+            return response.status(500).json({"error": `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`});
         }
     }
 }
