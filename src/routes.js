@@ -1,9 +1,7 @@
 import { Router } from 'express';
-
+import userController from './controller/user/userController';
 
 const routes = new Router();
-const userController = require('./controller/user/userController');
-
 
 routes.get('/', (req, res) => res.json({ message: 'Hello world' }));
 
@@ -13,6 +11,5 @@ routes.put('/users', userController.update);
 routes.delete('/users', userController.delete);
 
 routes.post('/login', userController.login);
-
 
 export default routes;

@@ -1,12 +1,9 @@
-var admin = require("firebase-admin");
-
-var serviceAccount = require("./dbconfig.json");
-
+import admin from 'firebase-admin';
+import serviceAccount from './dbconfig.json';
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://rede-de-mentores-rdm.firebaseio.com"
+  databaseURL: 'https://rede-de-mentores-rdm.firebaseio.com',
 });
-
 
 export default admin;
