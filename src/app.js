@@ -6,6 +6,7 @@ class App {
     this.server = express();
     this.middlewares();
     this.routes();
+    this.cors();
   }
 
   middlewares() {
@@ -14,6 +15,11 @@ class App {
 
   routes() {
     this.server.use(routes);
+  }
+
+  cors(){
+    const cors = require('cors')
+    this.server.use(cors())
   }
 }
 export default new App().server;
