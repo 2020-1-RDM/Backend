@@ -114,4 +114,58 @@ module.exports = {
       });
     }
   },
+  async integrateUserArea(request, response) {
+    try {
+      const { name, user } = request.body;
+      if (!name || !user) {
+        return response
+          .status(404)
+          .json({ error: 'Não foi encontrado esse usuário' });
+      }
+      const areasCollection = db.collection('area_conhecimento');
+      const userCollection = db.collection('user');
+      let resultArea = null;
+      let resultUser = null;
+      const listAreas = new Set();
+      await areasCollection
+        .where('name', '==', name)
+        .get()
+        .then((snapshot) => {
+          return snapshot.forEach((res) => {
+            resultArea = res.data().name;
+          });
+        });
+      await userCollection
+        .where('user', '==', user)
+        .get()
+        .then((snapshot) => {
+          return snapshot.forEach((res) => {
+            resultUser = res.id;
+            if (res.data().areas) {
+              const { areas } = res.data();
+              areas.forEach((area) => listAreas.add(area));
+            }
+          });
+        });
+      if (!resultArea) {
+        return response
+          .status(404)
+          .json({ error: 'Não foi encontrado essa área de conhecimento' });
+      }
+      if (!resultUser) {
+        return response
+          .status(404)
+          .json({ error: 'Não foi encontrado esse usuário' });
+      }
+      listAreas.add(resultArea);
+      await userCollection.doc(resultUser).update({
+        areas: Array.from(listAreas),
+      });
+      return response.status(200).send();
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
 };

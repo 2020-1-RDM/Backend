@@ -10,6 +10,10 @@ routes.get('/areaConhecimento', areaConhecimentoController.get);
 routes.post('/areaConhecimento', areaConhecimentoController.insert);
 routes.put('/areaConhecimento', areaConhecimentoController.update);
 routes.delete('/areaConhecimento', areaConhecimentoController.delete);
+routes.post(
+  '/areaConhecimento/integrate',
+  areaConhecimentoController.integrateUserArea
+);
 
 routes.get('/users', userController.get);
 routes.post('/users', userController.insert);
