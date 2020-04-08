@@ -1,8 +1,4 @@
 {
-  "env" : {
-      "JWT_KEY" : "rede-de-mentores"
-
-  },
   "execMap" : {
     "js": "node -r sucrase/register"
   }
