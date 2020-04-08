@@ -168,4 +168,57 @@ module.exports = {
       });
     }
   },
+  async deintegrateUserArea(request, response) {
+    try {
+      const { name, user } = request.body;
+      if (!name || !user) {
+        return response
+          .status(404)
+          .json({ error: 'Não foi encontrado esse usuário' });
+      }
+      const userCollection = db.collection('user');
+      let resultUser = null;
+      let listAreas = [];
+      await userCollection
+        .where('user', '==', user)
+        .get()
+        .then((snapshot) => {
+          return snapshot.forEach((res) => {
+            resultUser = res.id;
+            if (res.data().areas) {
+              listAreas = res.data().areas;
+            }
+          });
+        });
+      if (!resultUser) {
+        return response
+          .status(404)
+          .json({ error: 'Não foi encontrado esse usuário' });
+      }
+      if (!listAreas) {
+        return response.status(404).json({
+          error:
+            'Não foi encontrado esse as áreas de conhecimento desse usuário',
+        });
+      }
+      console.log(listAreas)
+      if (listAreas.includes(name))
+        listAreas = listAreas.filter((value) => {
+          return value !== name;
+        });
+      else {
+        return response.status(404).json({
+          error: 'Não foi encontrado essa área de conhecimento nesse usuário',
+        });
+      }
+      await userCollection.doc(resultUser).update({
+        areas: Array.from(listAreas),
+      });
+      return response.status(200).send();
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
 };

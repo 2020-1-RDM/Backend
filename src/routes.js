@@ -14,6 +14,10 @@ routes.post(
   '/areaConhecimento/integrate',
   areaConhecimentoController.integrateUserArea
 );
+routes.post(
+  '/areaConhecimento/deintegrate',
+  areaConhecimentoController.deintegrateUserArea
+);
 
 routes.get('/users', userController.get);
 routes.post('/users', userController.insert);
