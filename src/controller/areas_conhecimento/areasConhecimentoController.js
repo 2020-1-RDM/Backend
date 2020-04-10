@@ -1,4 +1,4 @@
-import admin from '../../database/connection';
+import admin from '../../configs/database/connection';
 
 require('dotenv').config();
 

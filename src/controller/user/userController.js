@@ -1,3 +1,6 @@
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
 import admin from '../../configs/database/connection';
 
 const db = admin.firestore();
@@ -17,6 +20,20 @@ async function getUsuario(email) {
     return null;
   }
   return dbVerification;
+}
+
+async function resizeImage(imageOptions) {
+  const [nameFile] = imageOptions.filename.split('.');
+  const fileName = `${nameFile}-resized.jpg`;
+
+  await sharp(imageOptions.path)
+    .resize(500)
+    .jpeg({ quality: 70 })
+    .toFile(path.resolve(imageOptions.destination, fileName));
+
+  fs.unlinkSync(imageOptions.path);
+
+  return fileName;
 }
 
 module.exports = {
@@ -51,9 +68,24 @@ module.exports = {
         name,
         linkedin,
         phone,
+        areas,
       } = request.body;
 
+      const image = await resizeImage(request.file);
+
       const userCollection = db.collection('user');
+      const areasCollection = db.collection('area_conhecimento');
+
+      const resultArea = [];
+
+      await areasCollection.get().then((snapshot) => {
+        return snapshot.forEach((res) => {
+          resultArea.push(res.data());
+        });
+      });
+      /* resultArea.filter((el) => {
+        return areas.includes(el.name);
+      }); */
 
       const dbVerification = await getUsuario(email);
       if (dbVerification) {
@@ -68,11 +100,13 @@ module.exports = {
         linkedin,
         email,
         mentorFlag,
+        image,
+        areas,
       });
       return response.status(200).send({ success: true });
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro ao inserir usuário : ${e}`,
       });
     }
   },
@@ -87,16 +121,31 @@ module.exports = {
         name,
         linkedin,
         phone,
+        areas,
       } = request.body;
 
-      const userCollection = db.collection('user');
-      const dbVerification = await getUsuario(email);
+      const image = await resizeImage(request.file);
 
+      const userCollection = db.collection('user');
+      const areasCollection = db.collection('area_conhecimento');
+
+      const dbVerification = await getUsuario(email);
+      const resultArea = [];
       if (!dbVerification) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
-      const teste = await userCollection.doc(dbVerification).set({
+      await areasCollection.get().then((snapshot) => {
+        return snapshot.forEach((res) => {
+          resultArea.push(res.data());
+        });
+      });
+
+      resultArea.filter((el) => {
+        return areas.includes(el.name);
+      });
+
+      await userCollection.doc(dbVerification).set({
         password,
         name,
         cpf,
@@ -104,13 +153,14 @@ module.exports = {
         linkedin,
         email,
         mentorFlag,
+        image,
+        areas: resultArea,
       });
 
-      console.log(teste);
-      return response.status(200).send();
+      return response.status(200).send({success: true, msg: "Usuário atualizado com sucesso"});
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro ao atualizar usuário : ${e}`,
       });
     }
   },
@@ -137,7 +187,7 @@ module.exports = {
         .send({ success: true, msg: `${email} removido com sucesso!` });
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro ao deletar usuário: ${e}`,
       });
     }
   },
