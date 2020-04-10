@@ -1,5 +1,6 @@
 /* eslint-disable func-names */
 import jwt from 'jsonwebtoken';
+import uuid from 'uuid';
 import admin from '../../database/connection';
 
 require('dotenv').config();
@@ -49,7 +50,6 @@ module.exports = {
       } = request.body;
 
       const image = request.files[0];
-
       const userCollection = db.collection('user');
       const areasCollection = db.collection('area_conhecimento');
       let dbVerification = null;
@@ -150,7 +150,7 @@ module.exports = {
         image: image.filename,
         areas: resultArea,
       });
-      
+
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({

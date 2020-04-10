@@ -1,4 +1,6 @@
+import path from 'path';
 import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
@@ -6,7 +8,7 @@ const storage = multer.diskStorage({
   },
 
   filename(req, file, cb) {
-    cb(null, file.originalname);
+    cb(null, uuidv4() + path.extname(file.originalname));
   },
 });
 const fileFilter = (req, file, cb) => {
