@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import userController from './controller/user/userController';
 import areaConhecimentoController from './controller/areas_conhecimento/areasConhecimentoController';
+import upload from './database/multer';
 
 const routes = new Router();
 
@@ -20,8 +21,8 @@ routes.post(
 );
 
 routes.get('/users', userController.get);
-routes.post('/users', userController.insert);
-routes.put('/users', userController.update);
+routes.post('/users', upload.array('image', 1), userController.insert);
+routes.put('/users', upload.array('image', 1), userController.update);
 routes.delete('/users', userController.delete);
 
 routes.post('/login', userController.login);

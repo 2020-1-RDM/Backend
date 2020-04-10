@@ -1,10 +1,10 @@
+/* eslint-disable func-names */
 import jwt from 'jsonwebtoken';
 import admin from '../../database/connection';
 
 require('dotenv').config();
 
 const db = admin.firestore();
-
 module.exports = {
   async get(request, response) {
     try {
@@ -45,11 +45,15 @@ module.exports = {
         name,
         linkedin,
         phone,
+        areas,
       } = request.body;
 
-      const userCollection = db.collection('user');
+      const image = request.files[0];
 
+      const userCollection = db.collection('user');
+      const areasCollection = db.collection('area_conhecimento');
       let dbVerification = null;
+      const resultArea = [];
       await userCollection
         .where('user', '==', user)
         .get()
@@ -62,6 +66,16 @@ module.exports = {
         return response.status(400).send({ error: 'Usuário já existe.' });
       }
 
+      await areasCollection.get().then((snapshot) => {
+        return snapshot.forEach((res) => {
+          resultArea.push(res.data());
+        });
+      });
+
+      resultArea.filter((el) => {
+        return areas.includes(el.name);
+      });
+
       await userCollection.add({
         user,
         password,
@@ -71,11 +85,13 @@ module.exports = {
         linkedin,
         email,
         mentorFlag,
+        image: image.filename,
+        areas: resultArea,
       });
       return response.status(201).send();
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento do cadastro. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
@@ -91,11 +107,16 @@ module.exports = {
         name,
         linkedin,
         phone,
+        areas,
       } = request.body;
 
-      const userCollection = db.collection('user');
+      const image = request.files[0];
 
+      const userCollection = db.collection('user');
+      const areasCollection = db.collection('area_conhecimento');
       let dbVerification = null;
+      const resultArea = [];
+
       await userCollection
         .where('user', '==', user)
         .get()
@@ -107,8 +128,17 @@ module.exports = {
       if (!dbVerification) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
+      await areasCollection.get().then((snapshot) => {
+        return snapshot.forEach((res) => {
+          resultArea.push(res.data());
+        });
+      });
 
-      await userCollection.doc(dbVerification).set({
+      resultArea.filter((el) => {
+        return areas.includes(el.name);
+      });
+
+      await userCollection.doc(dbVerification).update({
         user,
         password,
         name,
@@ -117,7 +147,10 @@ module.exports = {
         linkedin,
         email,
         mentorFlag,
+        image: image.filename,
+        areas: resultArea,
       });
+      
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({

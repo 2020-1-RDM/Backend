@@ -201,7 +201,7 @@ module.exports = {
             'Não foi encontrado esse as áreas de conhecimento desse usuário',
         });
       }
-      console.log(listAreas)
+      console.log(listAreas);
       if (listAreas.includes(name))
         listAreas = listAreas.filter((value) => {
           return value !== name;
