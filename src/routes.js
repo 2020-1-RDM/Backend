@@ -1,15 +1,23 @@
 import { Router } from 'express';
 import userController from './controller/user/userController';
+import sessionController from './controller/session/sessionController';
+import authMiddleware from './middlewares/auth';
 
 const routes = new Router();
 
-routes.get('/', (req, res) => res.json({ message: 'Hello world' }));
+routes.get('/ping', (req, res) => res.json({ message: 'pong' }));
 
-routes.get('/users', userController.get);
-routes.post('/users', userController.insert);
-routes.put('/users', userController.update);
-routes.delete('/users', userController.delete);
+/*
+    Routes of users
+ */
+routes.get('/users', authMiddleware, userController.get);
+routes.post('/users', authMiddleware, userController.insert);
+routes.put('/users', authMiddleware, userController.update);
+routes.delete('/users', authMiddleware, userController.delete);
 
-routes.post('/login', userController.login);
+/*
+    Routes from sessions
+ */
+routes.post('/login', sessionController.login);
 
 export default routes;
