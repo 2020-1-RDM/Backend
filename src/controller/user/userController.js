@@ -5,6 +5,22 @@ import admin from '../../configs/database/connection';
 
 const db = admin.firestore();
 
+async function verifyArea(listAreas) {
+  const areasCollection = db.collection('area_conhecimento');
+  const resultArea = [];
+
+  await areasCollection.get().then((snapshot) => {
+    return snapshot.forEach((res) => {
+      resultArea.push(res.data());
+    });
+  });
+
+  for (let i = 0; i < listAreas.length; i += 1) {
+    if (!resultArea.includes(listAreas[i]))
+      areasCollection.add({ name: listAreas[i] });
+  }
+}
+
 async function getUsuario(email) {
   const userCollection = db.collection('user');
   let dbVerification = null;
@@ -54,7 +70,7 @@ module.exports = {
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento de busca de usuários. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
@@ -74,23 +90,13 @@ module.exports = {
       const image = await resizeImage(request.file);
 
       const userCollection = db.collection('user');
-      const areasCollection = db.collection('area_conhecimento');
-
-      const resultArea = [];
-
-      await areasCollection.get().then((snapshot) => {
-        return snapshot.forEach((res) => {
-          resultArea.push(res.data());
-        });
-      });
-      /* resultArea.filter((el) => {
-        return areas.includes(el.name);
-      }); */
 
       const dbVerification = await getUsuario(email);
       if (dbVerification) {
         return response.status(400).send({ error: 'Usuário já existe.' });
       }
+
+      verifyArea(areas);
 
       await userCollection.add({
         password,
@@ -103,6 +109,7 @@ module.exports = {
         image,
         areas,
       });
+
       return response.status(200).send({ success: true });
     } catch (e) {
       return response.status(500).json({
@@ -127,7 +134,6 @@ module.exports = {
       const image = await resizeImage(request.file);
 
       const userCollection = db.collection('user');
-      const areasCollection = db.collection('area_conhecimento');
 
       const dbVerification = await getUsuario(email);
       const resultArea = [];
@@ -135,17 +141,9 @@ module.exports = {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
-      await areasCollection.get().then((snapshot) => {
-        return snapshot.forEach((res) => {
-          resultArea.push(res.data());
-        });
-      });
+      verifyArea(areas);
 
-      resultArea.filter((el) => {
-        return areas.includes(el.name);
-      });
-
-      await userCollection.doc(dbVerification).set({
+      await userCollection.doc(dbVerification).update({
         password,
         name,
         cpf,
@@ -157,7 +155,9 @@ module.exports = {
         areas: resultArea,
       });
 
-      return response.status(200).send({success: true, msg: "Usuário atualizado com sucesso"});
+      return response
+        .status(200)
+        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,

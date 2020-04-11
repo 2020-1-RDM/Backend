@@ -31,12 +31,7 @@ routes.post(
     Routes of users
  */
 routes.get('/users', authMiddleware, userController.get);
-routes.post(
-  '/users',
-  upload.single('image'),
-  authMiddleware,
-  userController.insert
-);
+routes.post('/users', upload.single('image'), userController.insert);
 routes.put(
   '/users',
   upload.single('image'),

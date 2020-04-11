@@ -110,7 +110,7 @@ module.exports = {
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento de deleção da área de conhecimento. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
@@ -164,7 +164,7 @@ module.exports = {
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento de integração entre usuário e área de conhecimento. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
@@ -201,7 +201,6 @@ module.exports = {
             'Não foi encontrado esse as áreas de conhecimento desse usuário',
         });
       }
-      console.log(listAreas);
       if (listAreas.includes(name))
         listAreas = listAreas.filter((value) => {
           return value !== name;
@@ -217,7 +216,7 @@ module.exports = {
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento de separação entre user e área de conhecimento. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
