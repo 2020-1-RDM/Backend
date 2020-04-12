@@ -10,8 +10,7 @@ export default async (req, res, next) => {
     return res.status(401).json({ message: 'Token needs to pass' });
   }
 
-  const token = authHeader;
-  // console.log(authHeader)
+  const [, token] = authHeader.split(' ');
   try {
     const decoded = await promisify(jwt.verify)(token, jwtAuth.secret);
     req.cpf = decoded.cpf;
