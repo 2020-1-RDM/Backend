@@ -191,4 +191,44 @@ module.exports = {
       });
     }
   },
+
+  async insert(request, response) {
+    try {
+      const {
+        name,
+        birthDate,
+        cpf,
+        phone,
+        registration,
+        email,
+        password,
+      } = request.body;
+
+      const image = await resizeImage(request.file);
+
+      const userCollection = db.collection('user');
+
+      const dbVerification = await getUsuario(email);
+      if (dbVerification) {
+        return response.status(400).send({ error: 'Usuário já existe.' });
+      }
+
+      await userCollection.add({
+        name,
+        birthDate,
+        cpf,
+        phone,
+        registration,
+        email,
+        password,
+        image,
+      });
+
+      return response.status(200).send({ success: true });
+    } catch(e) {
+      return response.status(500).json({
+        error: `Erro ao inserir usuário : ${e}`,
+      });
+    }
+  }
 };
