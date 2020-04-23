@@ -52,6 +52,92 @@ async function resizeImage(imageOptions) {
   return fileName;
 }
 
+async function newMenthor(request, response){
+  try {
+    const {
+      cpf,
+      mentorFlag,
+      email,
+      password,
+      name,
+      linkedin,
+      phone,
+      areas,
+    } = request.body; 
+
+    const image = await resizeImage(request.file);
+
+    const userCollection = db.collection('user');
+
+    const dbVerification = await getUsuario(email);
+    if (dbVerification) {
+      return response.status(400).send({ error: 'Usuário já existe.' });
+    }
+
+    verifyArea(areas);
+
+    await userCollection.add({
+      password,
+      name,
+      cpf,
+      phone,
+      linkedin,
+      email,
+      mentorFlag,
+      image,
+      areas,
+    });
+
+    return response.status(200).send({ success: true });
+  } catch (e) {
+    return response.status(500).json({
+      error: `Erro ao inserir usuário : ${e}`,
+    });
+  }
+}
+
+async function newtMentee(request, response) {
+  try {
+    const {
+      name,
+      birthDate,
+      cpf,
+      phone,
+      registration,
+      email,
+      password,
+    } = request.body;
+
+    console.log(request.body)
+
+    const image = await resizeImage(request.file);
+
+    const userCollection = db.collection('user');
+
+    const dbVerification = await getUsuario(email);
+    if (dbVerification) {
+      return response.status(400).send({ error: 'Usuário já existe.' });
+    }
+
+    await userCollection.add({
+      name,
+      birthDate,
+      cpf,
+      phone,
+      registration,
+      email,
+      password,
+      image,
+    });
+
+    return response.status(200).send({ success: true });
+  } catch(e) {
+    return response.status(500).json({
+      error: `Erro ao inserir usuário : ${e}`,
+    });
+  }
+}
+
 module.exports = {
   async get(request, response) {
     try {
@@ -75,42 +161,21 @@ module.exports = {
     }
   },
   async insert(request, response) {
+    console.log(request.body)
     try {
-      const {
-        cpf,
-        mentorFlag,
-        email,
-        password,
-        name,
-        linkedin,
-        phone,
-        areas,
-      } = request.body;
 
-      const image = await resizeImage(request.file);
+      const flag = request.body.flag
 
-      const userCollection = db.collection('user');
+      if (flag == "1"){
+        console.log("new menthor");
+        await newMenthor(request,response);
 
-      const dbVerification = await getUsuario(email);
-      if (dbVerification) {
-        return response.status(400).send({ error: 'Usuário já existe.' });
+      } else if (flag == "2"){
+        console.log("new mentee");
+        await newtMentee(request,response);
+      } else {
+        return response.status(400);
       }
-
-      verifyArea(areas);
-
-      await userCollection.add({
-        password,
-        name,
-        cpf,
-        phone,
-        linkedin,
-        email,
-        mentorFlag,
-        image,
-        areas,
-      });
-
-      return response.status(200).send({ success: true });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao inserir usuário : ${e}`,
@@ -191,44 +256,4 @@ module.exports = {
       });
     }
   },
-
-  async insert(request, response) {
-    try {
-      const {
-        name,
-        birthDate,
-        cpf,
-        phone,
-        registration,
-        email,
-        password,
-      } = request.body;
-
-      const image = await resizeImage(request.file);
-
-      const userCollection = db.collection('user');
-
-      const dbVerification = await getUsuario(email);
-      if (dbVerification) {
-        return response.status(400).send({ error: 'Usuário já existe.' });
-      }
-
-      await userCollection.add({
-        name,
-        birthDate,
-        cpf,
-        phone,
-        registration,
-        email,
-        password,
-        image,
-      });
-
-      return response.status(200).send({ success: true });
-    } catch(e) {
-      return response.status(500).json({
-        error: `Erro ao inserir usuário : ${e}`,
-      });
-    }
-  }
 };
