@@ -174,7 +174,9 @@ module.exports = {
         console.log("new mentee");
         await newtMentee(request,response);
       } else {
-        return response.status(400);
+        return response.status(400).send({
+          message: "Flag precisa ser passada"
+        });
       }
     } catch (e) {
       return response.status(500).json({
@@ -225,6 +227,47 @@ module.exports = {
         .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
       return response.status(500).json({
+        error: `Erro ao atualizar usuário : ${e}`,
+      });
+    }
+  },
+
+  async updateMentee(request, response) {
+    try {
+      const {
+        name,
+        birthDate,
+        cpf,
+        phone,
+        registration,
+        email,
+        password,
+      } = request.body;
+      
+      const image = await resizeImage(request.file);
+
+      const userCollection = db.collection('user');
+
+      const dbVerification = await getUsuario(email);
+      if (!dbVerification) {
+        return response.status(400).send({ error: 'Usuário não existe'});
+      }
+
+      await userCollection.doc(dbVerification).update({
+        name,
+        birthDate,
+        cpf,
+        phone,
+        registration,
+        password,
+        image,
+      });
+
+      return response
+      .status(200)
+      .send({ success: true, msg: 'Usuário atualizado com sucesso' });
+    } catch(e) {
+      return response.status.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
