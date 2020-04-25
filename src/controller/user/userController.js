@@ -53,6 +53,9 @@ async function resizeImage(imageOptions) {
 }
 
 async function newMenthor(request, response){
+
+  const userType = 1;
+
   try {
     const {
       cpf,
@@ -86,6 +89,7 @@ async function newMenthor(request, response){
       mentorFlag,
       image,
       areas,
+      userType
     });
 
     return response.status(200).send({ success: true });
@@ -97,6 +101,9 @@ async function newMenthor(request, response){
 }
 
 async function newtMentee(request, response) {
+
+  const userType = 2;
+
   try {
     const {
       name,
@@ -128,6 +135,7 @@ async function newtMentee(request, response) {
       email,
       password,
       image,
+      userType
     });
 
     return response.status(200).send({ success: true });
@@ -161,17 +169,15 @@ module.exports = {
     }
   },
   async insert(request, response) {
-    console.log(request.body)
+
     try {
 
       const flag = request.body.flag
 
       if (flag == "1"){
-        console.log("new menthor");
         await newMenthor(request,response);
 
       } else if (flag == "2"){
-        console.log("new mentee");
         await newtMentee(request,response);
       } else {
         return response.status(400).send({
