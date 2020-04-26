@@ -53,9 +53,6 @@ async function resizeImage(imageOptions) {
 }
 
 async function newMenthor(request, response){
-
-  const userType = 1;
-
   try {
     const {
       cpf,
@@ -89,7 +86,6 @@ async function newMenthor(request, response){
       mentorFlag,
       image,
       areas,
-      userType
     });
 
     return response.status(200).send({ success: true });
@@ -101,9 +97,6 @@ async function newMenthor(request, response){
 }
 
 async function newtMentee(request, response) {
-
-  const userType = 2;
-
   try {
     const {
       name,
@@ -125,7 +118,7 @@ async function newtMentee(request, response) {
     if (dbVerification) {
       return response.status(400).send({ error: 'Usuário já existe.' });
     }
-
+    
     await userCollection.add({
       name,
       birthDate,
@@ -135,7 +128,6 @@ async function newtMentee(request, response) {
       email,
       password,
       image,
-      userType
     });
 
     return response.status(200).send({ success: true });
@@ -169,7 +161,6 @@ module.exports = {
     }
   },
   async insert(request, response) {
-
     try {
 
       const flag = request.body.flag
@@ -209,24 +200,22 @@ module.exports = {
       const userCollection = db.collection('user');
 
       const dbVerification = await getUsuario(email);
-      const resultArea = [];
+      
       if (!dbVerification) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
       verifyArea(areas);
 
-      await userCollection.doc(dbVerification).update({
-        password,
-        name,
-        cpf,
-        phone,
-        linkedin,
-        email,
-        mentorFlag,
-        image,
-        areas: resultArea,
-      });
+      if(password) {await userCollection.doc(dbVerification).update({password});}
+      if(name) {await userCollection.doc(dbVerification).update({name});}
+      if(cpf) {await userCollection.doc(dbVerification).update({cpf});}
+      if(phone) {await userCollection.doc(dbVerification).update({phone});}
+      if(linkedin) {await userCollection.doc(dbVerification).update({linkedin});}
+      if(email) {await userCollection.doc(dbVerification).update({email});}
+      if(mentorFlag) {await userCollection.doc(dbVerification).update({mentorFlag});}
+      if(image) {await userCollection.doc(dbVerification).update({image});}
+      if(areas.length > 0) {await userCollection.doc(dbVerification).update({areas});}
 
       return response
         .status(200)
@@ -246,34 +235,29 @@ module.exports = {
         cpf,
         phone,
         registration,
-        email,
         password,
       } = request.body;
       
-      const image = await resizeImage(request.file);
-
       const userCollection = db.collection('user');
-
-      const dbVerification = await getUsuario(email);
+      
+      const dbVerification = await getUsuario(request.email);
+      
       if (!dbVerification) {
         return response.status(400).send({ error: 'Usuário não existe'});
       }
-
-      await userCollection.doc(dbVerification).update({
-        name,
-        birthDate,
-        cpf,
-        phone,
-        registration,
-        password,
-        image,
-      });
-
+      
+      if(name) {await userCollection.doc(dbVerification).update({name});}
+      if(birthDate) {await userCollection.doc(dbVerification).update({birthDate});}
+      if(cpf) {await userCollection.doc(dbVerification).update({cpf});}
+      if(phone) {await userCollection.doc(dbVerification).update({phone});}
+      if(registration) {await userCollection.doc(dbVerification).update({registration});}
+      if(password) {await userCollection.doc(dbVerification).update({password});}
+      
       return response
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch(e) {
-      return response.status.status(500).json({
+      return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
