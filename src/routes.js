@@ -3,6 +3,7 @@ import { Router } from 'express';
 import userController from './controller/user/userController';
 import areaConhecimentoController from './controller/areas_conhecimento/areasConhecimentoController';
 import sessionController from './controller/session/sessionController';
+import cadastroMentoriaController from './controller/cadastro_mentoria/cadastroMentoriaController';
 
 import authMiddleware from './middlewares/auth';
 import upload from './configs/multer/multer';
@@ -46,10 +47,10 @@ routes.delete('/users', authMiddleware, userController.delete);
  */
 routes.post('/login', sessionController.login);
 
-export default routes;
+/*
+Routes from mentoria
+*/
+routes.post('/cadastroMentoria', cadastroMentoriaController.insert);
+routes.get('/cadastroMentoria', cadastroMentoriaController.get);
 
-    /*
-        Routes from mentoria
-    */
-    routes.post('/cadastroMentoria', cadastroMentoriaController.insert);
-    routes.get('/cadastroMentoria', cadastroMentoriaController.get);
+export default routes;

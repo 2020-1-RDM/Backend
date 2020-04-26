@@ -2,7 +2,7 @@ import admin from '../../configs/database/connection';
 
 require('dotenv').config();
 
-const db = admin.firestore();
+const db = admin.firestore();                                                                                           
 
 module.exports = {
   async get(request, response) {
