@@ -15,7 +15,6 @@ async function verifyArea(listAreas) {
     });
   });
 
-
   for (let i = 0; i < listAreas.length; i += 1) {
     if (!resultArea.includes(listAreas[i]))
       areasCollection.add({ name: listAreas[i] });

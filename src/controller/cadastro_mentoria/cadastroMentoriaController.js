@@ -30,8 +30,8 @@ module.exports = {
         mentoringOption,
         dateTime,
       } = request.body;
-      console.log(request.file);
-      console.log(request.body);
+      // console.log(request.file);
+      // console.log(request.body);
 
       const image = await resizeImage(request.file);
 
