@@ -259,16 +259,14 @@ module.exports = {
         return response.status(400).send({ error: 'Usuário não existe'});
       }
 
-      await userCollection.doc(dbVerification).update({
-        name,
-        birthDate,
-        cpf,
-        phone,
-        registration,
-        password,
-        image,
-      });
-
+      if(name) {await userCollection.doc(dbVerification).update({name})};
+      if(birthDate) {await userCollection.doc(dbVerification).update({birthDate})};
+      if(cpf) {await userCollection.doc(dbVerification).update({cpf})};
+      if(phone) {await userCollection.doc(dbVerification).update({phone})};
+      if(registration) {await userCollection.doc(dbVerification).update({registration})};
+      if(password) {await userCollection.doc(dbVerification).update({password})};
+      if(image) {await userCollection.doc(dbVerification).update({image})};
+      
       return response
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
