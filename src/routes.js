@@ -45,12 +45,12 @@ routes.delete('/users', authMiddleware, userController.delete);
 /*
     Routes from sessions
  */
-routes.post('/login', upload.single('image'), authMiddleware, sessionController.login);
+routes.post('/login', sessionController.login);
 
 /*
 Routes from mentoria
 */
-routes.post('/cadastroMentoria', cadastroMentoriaController.insert);
+routes.post('/cadastroMentoria', upload.single('image'), authMiddleware, cadastroMentoriaController.insert);
 routes.get('/cadastroMentoria', cadastroMentoriaController.get);
 
 export default routes;
