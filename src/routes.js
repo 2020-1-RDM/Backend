@@ -51,6 +51,6 @@ routes.post('/login', sessionController.login);
 Routes from mentoria
 */
 routes.post('/cadastroMentoria', upload.single('image'), authMiddleware, cadastroMentoriaController.insert);
-routes.get('/cadastroMentoria', cadastroMentoriaController.get);
+routes.get('/mentoria', authMiddleware, cadastroMentoriaController.get);
 
 export default routes;

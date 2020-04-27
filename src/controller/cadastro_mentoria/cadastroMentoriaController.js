@@ -30,12 +30,10 @@ module.exports = {
         mentoringOption,
         dateTime,
       } = request.body;
-      // console.log(request.file);
-      // console.log(request.body);
-      console.log(request.body);
+
       const image = await resizeImage(request.file);
 
-      const { cpf } = request;
+      const cpf = request.cpf;
 
       const userCollection = db.collection('mentoria'); // agurdando criação da tabela de mentor
 
