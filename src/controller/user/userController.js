@@ -38,6 +38,23 @@ async function getUsuario(email) {
   return dbVerification;
 }
 
+async function getUserType(email) {
+  const userCollection = db.collection('user');
+  let currentUserType = null;
+  await userCollection
+    .where('email', '==', email)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        currentUserType = res.data().userType;
+      });
+    });
+  if (!currentUserType) {
+    return null;
+  }
+  return currentUserType;
+}
+
 async function resizeImage(imageOptions) {
   const [nameFile] = imageOptions.filename.split('.');
   const fileName = `${nameFile}-resized.jpg`;
@@ -115,15 +132,19 @@ async function newtMentee(request, response) {
       password,
     } = request.body;
 
-    console.log(request.body)
-
     const image = await resizeImage(request.file);
 
     const userCollection = db.collection('user');
 
     const dbVerification = await getUsuario(email);
     if (dbVerification) {
-      return response.status(400).send({ error: 'Usuário já existe.' });
+      const currentUserType = await getUserType(email);
+
+      if (currentUserType == userType || currentUserType == "3"){
+        return response.status(400).send({ error: 'Usuário já existe.' });
+      } 
+      console.log("adicionando perfil de aprendiz")
+      return response.status(200).send({success: true})
     }
 
     await userCollection.add({
