@@ -39,7 +39,7 @@ routes.put(
   userController.update
 );
 routes.delete('/users', authMiddleware, userController.delete);
-routes.put('/users/alter', upload.single('image'), authMiddleware, userController.updateMentee);
+routes.put('/users/alter', authMiddleware, userController.updateMentee);
 
 /*
     Routes from sessions
