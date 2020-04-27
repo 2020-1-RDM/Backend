@@ -32,7 +32,7 @@ module.exports = {
       } = request.body;
       // console.log(request.file);
       // console.log(request.body);
-
+      console.log(request.body);
       const image = await resizeImage(request.file);
 
       const { cpf } = request;

@@ -45,7 +45,7 @@ routes.delete('/users', authMiddleware, userController.delete);
 /*
     Routes from sessions
  */
-routes.post('/login', sessionController.login);
+routes.post('/login', upload.single('image'), authMiddleware, sessionController.login);
 
 /*
 Routes from mentoria
