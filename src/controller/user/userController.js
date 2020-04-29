@@ -5,6 +5,12 @@ import admin from '../../configs/database/connection';
 
 const db = admin.firestore();
 
+const userType = {
+  MENTHOR: 1,
+  MENTEE: 2,
+  BOTH: 3
+}
+
 // Verifications and settings
 
 async function getUserType(email) {
@@ -77,7 +83,6 @@ async function getUsuario(email) {
 
 // Inserting new menthor
 async function newMenthor(request, response) {
-  const userType = 1;
 
   try {
     const { cpf, email, password, name, linkedin, phone, areas } = request.body;
@@ -92,7 +97,7 @@ async function newMenthor(request, response) {
       const currentUserType = await getUserType(email);
 
       // Checks type of user to update it or not
-      if (currentUserType == userType || currentUserType == '3') {
+      if (currentUserType == userType.MENTHOR || currentUserType == userType.BOTH) {
         return response.status(400).send({ error: 'Usuário já existe.' });
       }
 
@@ -109,6 +114,8 @@ async function newMenthor(request, response) {
 
     verifyArea(areas);
 
+    const currentUserType = userType.MENTHOR;
+
     await userCollection.add({
       password,
       name,
@@ -118,7 +125,7 @@ async function newMenthor(request, response) {
       email,
       image,
       areas,
-      userType,
+      userType: currentUserType
     });
 
     return response.status(200).send({ success: true });
@@ -143,8 +150,8 @@ async function addMenthorData(newData, response) {
       await userCollection.doc(dbVerification).update({ areas });
     }
 
-    const userType = 3;
-    await userCollection.doc(dbVerification).update({ userType });
+    const currentUserType = userType.BOTH;
+    await userCollection.doc(dbVerification).update({ userType: currentUserType });
 
     return response
       .status(200)
@@ -158,8 +165,6 @@ async function addMenthorData(newData, response) {
 
 // Inserting new Mentee
 async function newtMentee(request, response) {
-  const userType = 2;
-
   try {
     const {
       name,
@@ -181,7 +186,7 @@ async function newtMentee(request, response) {
       // User already exists
       const currentUserType = await getUserType(email);
 
-      if (currentUserType == userType || currentUserType == '3') {
+      if (currentUserType == userType.MENTEE || currentUserType == userType.BOTH) {
         return response.status(400).send({ error: 'Usuário já existe.' });
       }
 
@@ -196,7 +201,8 @@ async function newtMentee(request, response) {
       return addMenteeData(newData, response);
     }
 
-    // User does not exist
+    const currentUserType = userType.MENTEE
+
     await userCollection.add({
       name,
       birthDate,
@@ -206,7 +212,7 @@ async function newtMentee(request, response) {
       email,
       password,
       image,
-      userType,
+      userType: currentUserType,
     });
 
     return response.status(200).send({ success: true });
@@ -234,8 +240,8 @@ async function addMenteeData(newData, response) {
       await userCollection.doc(dbVerification).update({ registration });
     }
 
-    const userType = 3;
-    await userCollection.doc(dbVerification).update({ userType });
+    const currentUserType = userType.BOTH;
+    await userCollection.doc(dbVerification).update({ userType: currentUserType });
 
     return response
       .status(200)
