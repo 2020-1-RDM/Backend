@@ -5,7 +5,6 @@ import admin from '../../configs/database/connection';
 
 const db = admin.firestore();
 
-
 // Verifications and settings
 
 async function getUserType(email) {
@@ -77,20 +76,11 @@ async function getUsuario(email) {
 // Auxiliary create functions
 
 // Inserting new menthor
-async function newMenthor(request, response){
-
+async function newMenthor(request, response) {
   const userType = 1;
 
   try {
-    const {
-      cpf,
-      email,
-      password,
-      name,
-      linkedin,
-      phone,
-      areas,
-    } = request.body; 
+    const { cpf, email, password, name, linkedin, phone, areas } = request.body;
 
     const image = await resizeImage(request.file);
 
@@ -102,21 +92,19 @@ async function newMenthor(request, response){
       const currentUserType = await getUserType(email);
 
       // Checks type of user to update it or not
-      if (currentUserType == userType || currentUserType == "3"){
-        
+      if (currentUserType == userType || currentUserType == '3') {
         return response.status(400).send({ error: 'Usuário já existe.' });
-      
-      } 
-      
+      }
+
       const newData = {
         linkedin,
         areas,
         dbVerification,
-        userCollection
-      }
+        userCollection,
+      };
 
       // User exists but it's type is different
-      return addMenthorData(newData, response)
+      return addMenthorData(newData, response);
     }
 
     verifyArea(areas);
@@ -130,7 +118,7 @@ async function newMenthor(request, response){
       email,
       image,
       areas,
-      userType
+      userType,
     });
 
     return response.status(200).send({ success: true });
@@ -142,42 +130,34 @@ async function newMenthor(request, response){
 }
 
 // Adds menthor data to an existing user of type mentee
-async function addMenthorData(newData, response){
-
-  try{
-  
-    const {
-      linkedin,
-      areas,
-      dbVerification,
-      userCollection
-    } = newData;
+async function addMenthorData(newData, response) {
+  try {
+    const { linkedin, areas, dbVerification, userCollection } = newData;
 
     await verifyArea(areas);
 
-    if(linkedin) {await userCollection.doc(dbVerification).update({linkedin})};
-    if(areas) {await userCollection.doc(dbVerification).update({areas})};
+    if (linkedin) {
+      await userCollection.doc(dbVerification).update({ linkedin });
+    }
+    if (areas) {
+      await userCollection.doc(dbVerification).update({ areas });
+    }
 
     const userType = 3;
-    await userCollection.doc(dbVerification).update({userType})
-      
+    await userCollection.doc(dbVerification).update({ userType });
+
     return response
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
-
-  } catch(e) {
-
+  } catch (e) {
     return response.status.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
-
     });
   }
 }
 
-
 // Inserting new Mentee
 async function newtMentee(request, response) {
-
   const userType = 2;
 
   try {
@@ -196,27 +176,24 @@ async function newtMentee(request, response) {
     const userCollection = db.collection('user');
 
     const dbVerification = await getUsuario(email);
-    
+
     if (dbVerification) {
       // User already exists
       const currentUserType = await getUserType(email);
 
-      if (currentUserType == userType || currentUserType == "3"){
-        
+      if (currentUserType == userType || currentUserType == '3') {
         return response.status(400).send({ error: 'Usuário já existe.' });
-      
-      } 
-      
+      }
+
       const newData = {
         birthDate,
         registration,
         dbVerification,
-        userCollection
-      }
+        userCollection,
+      };
 
       // User exists but it's type is different
-      return addMenteeData(newData, response)
-
+      return addMenteeData(newData, response);
     }
 
     // User does not exist
@@ -229,51 +206,46 @@ async function newtMentee(request, response) {
       email,
       password,
       image,
-      userType
+      userType,
     });
 
     return response.status(200).send({ success: true });
-
-  } catch(e) {
+  } catch (e) {
     return response.status(500).json({
       error: `Erro ao inserir usuário : ${e}`,
     });
-
   }
 }
 
 // Adds mentee data to an existing user of type menthor
-async function addMenteeData(newData, response){
-
-  try{
-  
-    const {
-      birthDate,
-      registration,
-      dbVerification,
-      userCollection
+async function addMenteeData(newData, response) {
+  try {
+    const { 
+      birthDate, 
+      registration, 
+      dbVerification, 
+      userCollection 
     } = newData;
 
-    if(birthDate) {await userCollection.doc(dbVerification).update({birthDate})};
-    if(registration) {await userCollection.doc(dbVerification).update({registration})};
+    if (birthDate) {
+      await userCollection.doc(dbVerification).update({ birthDate });
+    }
+    if (registration) {
+      await userCollection.doc(dbVerification).update({ registration });
+    }
 
     const userType = 3;
-    await userCollection.doc(dbVerification).update({userType})
-      
+    await userCollection.doc(dbVerification).update({ userType });
+
     return response
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
-
-  } catch(e) {
-
+  } catch (e) {
     return response.status.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
-
     });
   }
 }
-
-
 
 // Exported functions
 module.exports = {
@@ -299,19 +271,16 @@ module.exports = {
     }
   },
   async insert(request, response) {
-
     try {
+      const flag = request.body.flag;
 
-      const flag = request.body.flag
-
-      if (flag == "1"){
-        await newMenthor(request,response);
-
-      } else if (flag == "2"){
-        await newtMentee(request,response);
+      if (flag == '1') {
+        await newMenthor(request, response);
+      } else if (flag == '2') {
+        await newtMentee(request, response);
       } else {
         return response.status(400).send({
-          message: "Flag precisa ser passada"
+          message: 'Flag precisa ser passada',
         });
       }
     } catch (e) {
@@ -379,28 +348,42 @@ module.exports = {
         email,
         password,
       } = request.body;
-      
+
       const image = await resizeImage(request.file);
 
       const userCollection = db.collection('user');
 
       const dbVerification = await getUsuario(email);
       if (!dbVerification) {
-        return response.status(400).send({ error: 'Usuário não existe'});
+        return response.status(400).send({ error: 'Usuário não existe' });
       }
 
-      if(name) {await userCollection.doc(dbVerification).update({name})};
-      if(birthDate) {await userCollection.doc(dbVerification).update({birthDate})};
-      if(cpf) {await userCollection.doc(dbVerification).update({cpf})};
-      if(phone) {await userCollection.doc(dbVerification).update({phone})};
-      if(registration) {await userCollection.doc(dbVerification).update({registration})};
-      if(password) {await userCollection.doc(dbVerification).update({password})};
-      if(image) {await userCollection.doc(dbVerification).update({image})};
-      
+      if (name) {
+        await userCollection.doc(dbVerification).update({ name });
+      }
+      if (birthDate) {
+        await userCollection.doc(dbVerification).update({ birthDate });
+      }
+      if (cpf) {
+        await userCollection.doc(dbVerification).update({ cpf });
+      }
+      if (phone) {
+        await userCollection.doc(dbVerification).update({ phone });
+      }
+      if (registration) {
+        await userCollection.doc(dbVerification).update({ registration });
+      }
+      if (password) {
+        await userCollection.doc(dbVerification).update({ password });
+      }
+      if (image) {
+        await userCollection.doc(dbVerification).update({ image });
+      }
+
       return response
-      .status(200)
-      .send({ success: true, msg: 'Usuário atualizado com sucesso' });
-    } catch(e) {
+        .status(200)
+        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
+    } catch (e) {
       return response.status.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
