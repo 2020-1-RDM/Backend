@@ -5,38 +5,8 @@ import admin from '../../configs/database/connection';
 
 const db = admin.firestore();
 
-async function verifyArea(listAreas) {
-  const areasCollection = db.collection('area_conhecimento');
-  const resultArea = [];
 
-  await areasCollection.get().then((snapshot) => {
-    return snapshot.forEach((res) => {
-      resultArea.push(res.data());
-    });
-  });
-
-  for (let i = 0; i < listAreas.length; i += 1) {
-    if (!resultArea.includes(listAreas[i]))
-      areasCollection.add({ name: listAreas[i] });
-  }
-}
-
-async function getUsuario(email) {
-  const userCollection = db.collection('user');
-  let dbVerification = null;
-  await userCollection
-    .where('email', '==', email)
-    .get()
-    .then((snapshot) => {
-      return snapshot.forEach((res) => {
-        dbVerification = res.id;
-      });
-    });
-  if (!dbVerification) {
-    return null;
-  }
-  return dbVerification;
-}
+// Verifications and settings
 
 async function getUserType(email) {
   const userCollection = db.collection('user');
@@ -69,6 +39,44 @@ async function resizeImage(imageOptions) {
   return fileName;
 }
 
+async function verifyArea(listAreas) {
+  const areasCollection = db.collection('area_conhecimento');
+  const resultArea = [];
+
+  await areasCollection.get().then((snapshot) => {
+    return snapshot.forEach((res) => {
+      resultArea.push(res.data());
+    });
+  });
+
+  for (let i = 0; i < listAreas.length; i += 1) {
+    if (!resultArea.includes(listAreas[i]))
+      areasCollection.add({ name: listAreas[i] });
+  }
+}
+
+// Getters
+
+async function getUsuario(email) {
+  const userCollection = db.collection('user');
+  let dbVerification = null;
+  await userCollection
+    .where('email', '==', email)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        dbVerification = res.id;
+      });
+    });
+  if (!dbVerification) {
+    return null;
+  }
+  return dbVerification;
+}
+
+// Auxiliary create functions
+
+// Inserting new menthor
 async function newMenthor(request, response){
 
   const userType = 1;
@@ -90,7 +98,25 @@ async function newMenthor(request, response){
 
     const dbVerification = await getUsuario(email);
     if (dbVerification) {
-      return response.status(400).send({ error: 'Usuário já existe.' });
+      // User already exists
+      const currentUserType = await getUserType(email);
+
+      // Checks type of user to update it or not
+      if (currentUserType == userType || currentUserType == "3"){
+        
+        return response.status(400).send({ error: 'Usuário já existe.' });
+      
+      } 
+      
+      const newData = {
+        linkedin,
+        areas,
+        dbVerification,
+        userCollection
+      }
+
+      // User exists but it's type is different
+      return addMenthorData(newData, response)
     }
 
     verifyArea(areas);
@@ -115,6 +141,41 @@ async function newMenthor(request, response){
   }
 }
 
+// Adds menthor data to an existing user of type mentee
+async function addMenthorData(newData, response){
+
+  try{
+  
+    const {
+      linkedin,
+      areas,
+      dbVerification,
+      userCollection
+    } = newData;
+
+    await verifyArea(areas);
+
+    if(linkedin) {await userCollection.doc(dbVerification).update({linkedin})};
+    if(areas) {await userCollection.doc(dbVerification).update({areas})};
+
+    const userType = 3;
+    await userCollection.doc(dbVerification).update({userType})
+      
+    return response
+      .status(200)
+      .send({ success: true, msg: 'Usuário atualizado com sucesso' });
+
+  } catch(e) {
+
+    return response.status.status(500).json({
+      error: `Erro ao atualizar usuário : ${e}`,
+
+    });
+  }
+}
+
+
+// Inserting new Mentee
 async function newtMentee(request, response) {
 
   const userType = 2;
@@ -135,22 +196,30 @@ async function newtMentee(request, response) {
     const userCollection = db.collection('user');
 
     const dbVerification = await getUsuario(email);
+    
     if (dbVerification) {
+      // User already exists
       const currentUserType = await getUserType(email);
 
       if (currentUserType == userType || currentUserType == "3"){
+        
         return response.status(400).send({ error: 'Usuário já existe.' });
+      
       } 
-      console.log("adicionando perfil de aprendiz")
+      
       const newData = {
         birthDate,
         registration,
         dbVerification,
         userCollection
       }
-      await addMenteeData(newData, response)
+
+      // User exists but it's type is different
+      return addMenteeData(newData, response)
+
     }
 
+    // User does not exist
     await userCollection.add({
       name,
       birthDate,
@@ -164,15 +233,20 @@ async function newtMentee(request, response) {
     });
 
     return response.status(200).send({ success: true });
+
   } catch(e) {
     return response.status(500).json({
       error: `Erro ao inserir usuário : ${e}`,
     });
+
   }
 }
 
+// Adds mentee data to an existing user of type menthor
 async function addMenteeData(newData, response){
+
   try{
+  
     const {
       birthDate,
       registration,
@@ -180,19 +254,28 @@ async function addMenteeData(newData, response){
       userCollection
     } = newData;
 
-      if(birthDate) {await userCollection.doc(dbVerification).update({birthDate})};
-      if(registration) {await userCollection.doc(dbVerification).update({registration})};
+    if(birthDate) {await userCollection.doc(dbVerification).update({birthDate})};
+    if(registration) {await userCollection.doc(dbVerification).update({registration})};
+
+    const userType = 3;
+    await userCollection.doc(dbVerification).update({userType})
       
-      return response
+    return response
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
-    } catch(e) {
-      return response.status.status(500).json({
-        error: `Erro ao atualizar usuário : ${e}`,
-      });
-    }
+
+  } catch(e) {
+
+    return response.status.status(500).json({
+      error: `Erro ao atualizar usuário : ${e}`,
+
+    });
+  }
 }
 
+
+
+// Exported functions
 module.exports = {
   async get(request, response) {
     try {
