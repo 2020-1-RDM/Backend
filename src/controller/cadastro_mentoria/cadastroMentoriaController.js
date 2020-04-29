@@ -5,7 +5,6 @@ import admin from '../../configs/database/connection';
 
 const db = admin.firestore();
 
-// imagem
 async function resizeImage(imageOptions) {
   const [nameFile] = imageOptions.filename.split('.');
   const fileName = `${nameFile}-resized.jpg`;
@@ -29,13 +28,14 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         dateTime,
+        dayOfWeek,
       } = request.body;
 
       const image = await resizeImage(request.file);
 
       const cpf = request.cpf;
 
-      const userCollection = db.collection('mentoria'); // agurdando criação da tabela de mentor
+      const userCollection = db.collection('mentoria');
 
       await userCollection.add({
         image,
@@ -45,6 +45,7 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         dateTime,
+        dayOfWeek,
       });
 
       return response.status(200).send({ success: true });
