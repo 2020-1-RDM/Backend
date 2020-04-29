@@ -76,7 +76,6 @@ async function newMenthor(request, response){
   try {
     const {
       cpf,
-      mentorFlag,
       email,
       password,
       name,
@@ -103,7 +102,6 @@ async function newMenthor(request, response){
       phone,
       linkedin,
       email,
-      mentorFlag,
       image,
       areas,
       userType
@@ -144,7 +142,13 @@ async function newtMentee(request, response) {
         return response.status(400).send({ error: 'Usuário já existe.' });
       } 
       console.log("adicionando perfil de aprendiz")
-      return response.status(200).send({success: true})
+      const newData = {
+        birthDate,
+        registration,
+        dbVerification,
+        userCollection
+      }
+      await addMenteeData(newData, response)
     }
 
     await userCollection.add({
@@ -165,6 +169,28 @@ async function newtMentee(request, response) {
       error: `Erro ao inserir usuário : ${e}`,
     });
   }
+}
+
+async function addMenteeData(newData, response){
+  try{
+    const {
+      birthDate,
+      registration,
+      dbVerification,
+      userCollection
+    } = newData;
+
+      if(birthDate) {await userCollection.doc(dbVerification).update({birthDate})};
+      if(registration) {await userCollection.doc(dbVerification).update({registration})};
+      
+      return response
+      .status(200)
+      .send({ success: true, msg: 'Usuário atualizado com sucesso' });
+    } catch(e) {
+      return response.status.status(500).json({
+        error: `Erro ao atualizar usuário : ${e}`,
+      });
+    }
 }
 
 module.exports = {
