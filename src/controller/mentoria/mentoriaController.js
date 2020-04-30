@@ -1,23 +1,9 @@
-import sharp from 'sharp';
-import fs from 'fs';
-import path from 'path';
 import admin from '../../configs/database/connection';
+import resizeImage from '../../helper/resizeImageHelper';
 
 const db = admin.firestore();
 
-async function resizeImage(imageOptions) {
-  const [nameFile] = imageOptions.filename.split('.');
-  const fileName = `${nameFile}-resized.jpg`;
 
-  await sharp(imageOptions.path)
-    .resize(500)
-    .jpeg({ quality: 70 })
-    .toFile(path.resolve(imageOptions.destination, fileName));
-
-  fs.unlinkSync(imageOptions.path);
-
-  return fileName;
-}
 
 module.exports = {
   async insert(request, response) {
@@ -33,13 +19,13 @@ module.exports = {
 
       const image = await resizeImage(request.file);
 
-      const cpf = request.cpf;
+      const cpfSession = request.cpf;
 
       const userCollection = db.collection('mentoria');
 
       await userCollection.add({
         image,
-        cpf,
+        cpf: cpfSession,
         title,
         description,
         knowledgeArea,
@@ -56,11 +42,34 @@ module.exports = {
     }
   },
 
-  async get(request, response) {
+  async getMentoriaSession(request, response) {
+    try{
+    const mentoriaCollection = db.collection('mentoria');
+    const results = [];
+      await mentoriaCollection.where('cpf', '==', request.cpf).get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          results.push(doc.data());
+        });
+      });
+      if (!results.length) {
+        return response
+          .status(400)
+          .json({ error: 'Não tem mentorias para serem listados' });
+      }
+      return response.status(200).json(results);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+    
+  },
+
+  async getAll(request, response) {
     try {
-      const userCollection = db.collection('mentoria');
+      const mentoriaCollection = db.collection('mentoria');
       const results = [];
-      await userCollection.get().then((snapshot) => {
+      await mentoriaCollection.get().then((snapshot) => {
         snapshot.forEach((doc) => {
           results.push(doc.data());
         });
@@ -77,4 +86,8 @@ module.exports = {
       });
     }
   },
+
+  
+
+  
 };
