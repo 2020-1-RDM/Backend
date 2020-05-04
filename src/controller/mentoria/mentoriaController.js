@@ -17,7 +17,7 @@ module.exports = {
 
       const image = await resizeImage(request.file);
 
-      const cpfSession = request.cpf;
+      const cpfSession = request.tokenCpf;
 
       const mentoriaCollection = db.collection('mentoria');
 
@@ -45,7 +45,7 @@ module.exports = {
       const mentoriaCollection = db.collection('mentoria');
       const results = [];
       await mentoriaCollection
-        .where('cpf', '==', request.cpf)
+        .where('cpf', '==', request.tokenCpf)
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
