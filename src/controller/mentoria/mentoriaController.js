@@ -3,8 +3,6 @@ import resizeImage from '../../helper/resizeImageHelper';
 
 const db = admin.firestore();
 
-
-
 module.exports = {
   async insert(request, response) {
     try {
@@ -21,9 +19,9 @@ module.exports = {
 
       const cpfSession = request.cpf;
 
-      const userCollection = db.collection('mentoria');
+      const mentoriaCollection = db.collection('mentoria');
 
-      await userCollection.add({
+      await mentoriaCollection.add({
         image,
         cpf: cpfSession,
         title,
@@ -43,14 +41,17 @@ module.exports = {
   },
 
   async getMentoriaSession(request, response) {
-    try{
-    const mentoriaCollection = db.collection('mentoria');
-    const results = [];
-      await mentoriaCollection.where('cpf', '==', request.cpf).get().then((snapshot) => {
-        snapshot.forEach((doc) => {
-          results.push(doc.data());
+    try {
+      const mentoriaCollection = db.collection('mentoria');
+      const results = [];
+      await mentoriaCollection
+        .where('cpf', '==', request.cpf)
+        .get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            results.push(doc.data());
+          });
         });
-      });
       if (!results.length) {
         return response
           .status(400)
@@ -62,7 +63,6 @@ module.exports = {
         error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
-    
   },
 
   async getAll(request, response) {
@@ -86,8 +86,4 @@ module.exports = {
       });
     }
   },
-
-  
-
-  
 };
