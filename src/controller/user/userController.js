@@ -226,7 +226,7 @@ async function addMenteeData(newData, response) {
 module.exports = {
   async get(request, response) {
     try {
-      const user = await getUser(request.sessionEmail);
+      const user = await getUser(request.tokenEmail);
       if (!user) {
         return response.status(400).json({ error: 'Nenhum usuário' });
       }
