@@ -86,4 +86,56 @@ module.exports = {
       });
     }
   },
+
+  async updateMentoria(request, response) {
+    try {
+      const {
+        title,
+        description,
+        knowledgeArea,
+        mentoringOption,
+        dateTime,
+        dayOfWeek,
+      } = request.body;
+      console.log(request.body);
+      const image = await resizeImage(request.file);
+
+      const mentoriaCollection = db.collection('mentoria');
+
+      const mentoria = await getMentoriaSession(request.tokenCpf);
+      if (!mentoria) {
+        return response.status(400).send({ error: 'Mentoria não existe' });
+      }
+
+      if (title) {
+        await mentoriaCollection.doc(mentoria.id).update({ title });
+      }
+      if (description) {
+        await mentoriaCollection.doc(mentoria.id).update({ description });
+      }
+      if (knowledgeArea) {
+        await mentoriaCollection.doc(mentoria.id).update({ knowledgeArea });
+      }
+      if (mentoringOption) {
+        await mentoriaCollection.doc(mentoria.id).update({ mentoringOption });
+      }
+      if (dateTime) {
+        await mentoriaCollection.doc(mentoria.id).update({ dateTime });
+      }
+      if (dayOfWeek) {
+        await mentoriaCollection.doc(mentoria.id).update({ dayOfWeek });
+      }
+      if (image) {
+        await mentoriaCollection.doc(mentoria.id).update({ image });
+      }
+
+      return response
+        .status(200)
+        .send({ success: true, msg: 'Mentoria atualizado com sucesso' });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao atualizar mentoria : ${e}`,
+      });
+    }
+  }
 };
