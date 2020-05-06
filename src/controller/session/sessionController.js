@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import admin from '../../configs/database/connection';
 import jwtAuth from '../../configs/jwt/auth';
 
@@ -18,7 +19,6 @@ module.exports = {
       let result = null;
       await userCollection
         .where('email', '==', email)
-        .where('password', '==', password)
         .get()
         .then((snapshot) => {
           return snapshot.forEach((res) => {
@@ -27,7 +27,10 @@ module.exports = {
         });
 
       if (!result) {
-        return response.status(401).json({ error: 'Erro de autenticação!' });
+        return response.status(401).json({ error: 'Usuário inválido!' });
+      }
+      if (!(await bcrypt.compare(password, result.password))) {
+        return response.status(401).json({ error: 'Senha incorreta' });
       }
 
       return response.status(200).json({

@@ -9,12 +9,11 @@ export default async (req, res, next) => {
   if (!authHeader) {
     return res.status(401).json({ message: 'Token needs to pass' });
   }
-
   const [, token] = authHeader.split(' ');
   try {
     const decoded = await promisify(jwt.verify)(token, jwtAuth.secret);
-    req.cpf = decoded.cpf;
-    req.email = decoded.email;
+    req.tokenCpf = decoded.cpf;
+    req.tokenEmail = decoded.email;
     next();
   } catch (err) {
     return res.status(400).json({ message: 'Token invalid' });
