@@ -97,12 +97,16 @@ module.exports = {
         dateTime,
         dayOfWeek,
       } = request.body;
-      console.log(request.body);
-      const image = await resizeImage(request.file);
-
+      
+      if (request.file){
+        const image = await resizeImage(request.file);
+      }
+      
       const mentoriaCollection = db.collection('mentoria');
+       console.log(request.body);
+    
+       const mentoria = await getMentoriaSession(request);
 
-      const mentoria = await getMentoriaSession(request.tokenCpf);
       if (!mentoria) {
         return response.status(400).send({ error: 'Mentoria não existe' });
       }
