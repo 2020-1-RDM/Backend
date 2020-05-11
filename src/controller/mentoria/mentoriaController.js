@@ -3,6 +3,29 @@ import resizeImage from '../../helper/resizeImageHelper';
 
 const db = admin.firestore();
 
+async function getMentoriaTeste(request, response) {
+  try {
+    const mentoriaCollection = db.collection('mentoria');
+    const results = [];
+    await mentoriaCollection
+      .where('cpf', '==', request.tokenCpf)
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+          results.push({
+            id: doc.id,
+            data: doc.data()});
+        });
+      });
+    if (!results.length) {
+      return null;
+    }
+    return results;
+  } catch (e) {
+    return null;
+  }
+};
+
 module.exports = {
   async insert(request, response) {
     try {
@@ -103,35 +126,46 @@ module.exports = {
       }
       
       const mentoriaCollection = db.collection('mentoria');
-       console.log(request.body);
     
-       const mentoria = await getMentoriaSession(request);
-
+       const mentoria = await getMentoriaTeste(request);
       if (!mentoria) {
         return response.status(400).send({ error: 'Mentoria não existe' });
       }
-
+      let update = { }
       if (title) {
-        await mentoriaCollection.doc(mentoria.id).update({ title });
+        update.title = title;
       }
       if (description) {
-        await mentoriaCollection.doc(mentoria.id).update({ description });
+        update.description = description;
       }
       if (knowledgeArea) {
-        await mentoriaCollection.doc(mentoria.id).update({ knowledgeArea });
+        update.knowledgeArea = knowledgeArea;
       }
       if (mentoringOption) {
-        await mentoriaCollection.doc(mentoria.id).update({ mentoringOption });
+        update.mentoringOption = mentoringOption;
       }
       if (dateTime) {
-        await mentoriaCollection.doc(mentoria.id).update({ dateTime });
+        update.dateTime = dateTime;
       }
       if (dayOfWeek) {
-        await mentoriaCollection.doc(mentoria.id).update({ dayOfWeek });
+        update.dayOfWeek = dayOfWeek;
       }
-      if (image) {
-        await mentoriaCollection.doc(mentoria.id).update({ image });
-      }
+      //ARRUMAR AQUI
+      // if (image) {
+      //   update.image = image;
+      // }
+      
+      await mentoriaCollection.doc(mentoria[0].id).update({
+        title: update.title,
+        description: update.description,
+        knowledgeArea: update.knowledgeArea, 
+        mentoringOption: update.mentoringOption,
+        dateTime: update.dateTime, 
+        dayOfWeek: update.dayOfWeek,
+        //ARRUMAR AQUI
+        //image: update.image
+      });
+    
 
       return response
         .status(200)
