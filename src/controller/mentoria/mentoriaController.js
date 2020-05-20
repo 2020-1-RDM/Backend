@@ -3,7 +3,22 @@ import resizeImage from '../../helper/resizeImageHelper';
 
 const db = admin.firestore();
 
-async function getMentoriaTeste(request, response) {
+async function getMentoriaById(request, response) {
+      const id = request.params.id;
+    
+      const mentorias = await getMentoriaMentor(request);
+      if (!mentorias) {
+        return response.status(400).send({ error: 'Mentoria não existe' });
+      }
+      
+      let mentoria = mentorias.filter(m => {
+        return m.id === id;
+      })[0].data;
+
+      return mentoria;
+}
+
+async function getMentoriaMentor(request, response) {
   try {
     const mentoriaCollection = db.collection('mentoria');
     const results = [];
@@ -117,62 +132,57 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dateTime,
         dayOfWeek,
+        time,
       } = request.body;
-      
-      if (request.file){
-        const image = await resizeImage(request.file);
-      }
-      
-      const mentoriaCollection = db.collection('mentoria');
-    
-       const mentoria = await getMentoriaTeste(request);
-      if (!mentoria) {
-        return response.status(400).send({ error: 'Mentoria não existe' });
-      }
-      let update = { }
-      if (title) {
-        update.title = title;
-      }
-      if (description) {
-        update.description = description;
-      }
-      if (knowledgeArea) {
-        update.knowledgeArea = knowledgeArea;
-      }
-      if (mentoringOption) {
-        update.mentoringOption = mentoringOption;
-      }
-      if (dateTime) {
-        update.dateTime = dateTime;
-      }
-      if (dayOfWeek) {
-        update.dayOfWeek = dayOfWeek;
-      }
-      //ARRUMAR AQUI
-      // if (image) {
-      //   update.image = image;
-      // }
-      
-      await mentoriaCollection.doc(mentoria[0].id).update({
-        title: update.title,
-        description: update.description,
-        knowledgeArea: update.knowledgeArea, 
-        mentoringOption: update.mentoringOption,
-        dateTime: update.dateTime, 
-        dayOfWeek: update.dayOfWeek,
-        //ARRUMAR AQUI
-        //image: update.image
-      });
-    
 
+      const image = await resizeImage(request.file);
+      const mentoriaCollection = db.collection('mentoria');
+      const mentoria = await getMentoriaById(request);
+
+      let update = { }
+      update.title = title && title != mentoria.title ? title : mentoria.title;
+      update.description = description && description != mentoria.description ? description : mentoria.description;
+      update.knowledgeArea = knowledgeArea && knowledgeArea != mentoria.knowledgeArea ? knowledgeArea : mentoria.knowledgeArea;
+      update.mentoringOption = mentoringOption && mentoringOption != mentoria.mentoringOption ? mentoringOption : mentoria.mentoringOption;
+      update.dateTime = dateTime && dateTime != mentoria.dateTime ? dateTime : mentoria.dateTime;
+      update.dayOfWeek = dayOfWeek && dayOfWeek != mentoria.dayOfWeek ? dayOfWeek : mentoria.dayOfWeek;
+      update.time = time && time != mentoria.time ? time : mentoria.time;
+      update.image = image ? image : mentoria.image;
+
+      await mentoriaCollection.doc(id).update(update);
+    
       return response
         .status(200)
-        .send({ success: true, msg: 'Mentoria atualizado com sucesso' });
+        .send({ success: true, msg: 'Mentoria atualizada com sucesso', data: update });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar mentoria : ${e}`,
+      });
+    }
+  },
+
+  async deactivateMentoria(request, response) {
+    try {
+      const {
+        flagDesativado
+      } = request.body;
+
+      const id = request.params.id;
+      const mentoriaCollection = db.collection('mentoria');
+      const mentoria = await getMentoriaById(request);
+
+      let flag = { }
+      flag.flagDesativado = flagDesativado ? flagDesativado : mentoria.flagDesativado;
+    
+      await mentoriaCollection.doc(id).update(flag);
+    
+      return response
+        .status(200)
+        .send({ success: true, msg: 'Mentoria desativada'});
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao desativar mentoria : ${e}`,
       });
     }
   }
