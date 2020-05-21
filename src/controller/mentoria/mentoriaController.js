@@ -25,80 +25,98 @@ module.exports = {
 
       const dateTimeCollection = db.collection('dateTime');
 
-      const cd = Date.now();
+      /*const cd = Date.now();
 
       const currentDate = new Date(cd);
-      // currentDate.setDate(currentDate.getDate() + 20);
-      // console.log(currentDate.getMonth(currentDate));
+      currentDate.setDate(currentDate.getDate() + 20);
+      const ano = currentDate.getFullYear(currentDate);
+      const mes = currentDate.getMonth(currentDate);
+      const dia = currentDate.getDate(currentDate);
+      const dataCompleta = dia + '/' + mes + '/' + ano;
+      console.log (dataCompleta);
+      //console.log(currentDate.getMonth(currentDate));
 
-      // const d = new Date(2019, 0, 3);
-      // d.setDate(d.getDate() + 1);
-      // console.log(d);
-
+      const d = new Date(2019, 0, 3);
+      d.setDate(d.getDate() + 1);
+      console.log(d);
+      */
       let timeDate = [{}];
-
+      let dateTimeId;
       // eslint-disable-next-line no-plusplus
       for (let x = 0; x < dayOfWeek.length; x++) {
-        const sumForFirstDay = getFirstDate(dayOfWeek[x], currentDate);
-        console.log(
-          currentDate.setDate(currentDate.getDate() + sumForFirstDay)
-        );
+        const cd = Date.now();
+        const currentDate = new Date(cd);
+        
+        const sumForFirstDay = await getFirstDate(dayOfWeek[x], currentDate);
+        
+        console.log(sumForFirstDay);
+        
+        currentDate.setDate(currentDate.getDate() + sumForFirstDay);
+        const mentorinDay1 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+        
+        console.log(mentorinDay1);
+
+        currentDate.setDate(currentDate.getDate() + 7);
+        const mentorinDay2 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+
+        console.log(mentorinDay2);
+
+        currentDate.setDate(currentDate.getDate() + 7);
+        const mentorinDay3 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+
+        currentDate.setDate(currentDate.getDate() + 7);
+        const mentorinDay4 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+
 
         timeDate = [
           {
-            day: dayOfWeek,
-            dayOfTheMonth: currentDate.setDate(
-              currentDate.getDate() + sumForFirstDay
-            ),
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentorinDay1,
             times: [
               {
-                hour: time,
+                hour: time[x],
                 flag: false,
               },
             ],
           },
           {
-            day: dayOfWeek,
-            dayOfTheMonth: currentDate.setDate(
-              currentDate.getDate() + sumForFirstDay + 7
-            ),
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentorinDay2,
             times: [
               {
-                hour: time,
+                hour: time[x],
                 flag: false,
               },
             ],
           },
           {
-            day: dayOfWeek,
-            dayOfTheMonth: currentDate.setDate(
-              currentDate.getDate() + sumForFirstDay + 14
-            ),
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentorinDay3,
             times: [
               {
-                hour: time,
+                hour: time[x],
                 flag: false,
               },
             ],
           },
           {
-            day: dayOfWeek,
-            dayOfTheMonth: currentDate.setDate(
-              currentDate.getDate() + sumForFirstDay + 21
-            ),
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentorinDay4,
             times: [
               {
-                hour: time,
+                hour: time[x],
                 flag: false,
               },
             ],
           },
         ];
+        dateTimeId = await (await dateTimeCollection.add({ timeDate })).id;
+        console.log(dateTimeId);
       }
 
-      const dateTimeId = await (await dateTimeCollection.add({ timeDate })).id;
+      //const dateTimeId = await (await dateTimeCollection.add({ timeDate })).id;
 
-      console.log(dateTimeId);
+      //console.log(dateTimeId);
 
       await mentoriaCollection.add({
         image,
