@@ -12,7 +12,6 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        // flagDesativado,
         dayOfWeek = [],
         time = [],
       } = request.body;
@@ -24,42 +23,21 @@ module.exports = {
       const mentoriaCollection = db.collection('mentoria');
 
       const dateTimeCollection = db.collection('dateTime');
-
-      /*const cd = Date.now();
-
-      const currentDate = new Date(cd);
-      currentDate.setDate(currentDate.getDate() + 20);
-      const ano = currentDate.getFullYear(currentDate);
-      const mes = currentDate.getMonth(currentDate);
-      const dia = currentDate.getDate(currentDate);
-      const dataCompleta = dia + '/' + mes + '/' + ano;
-      console.log (dataCompleta);
-      //console.log(currentDate.getMonth(currentDate));
-
-      const d = new Date(2019, 0, 3);
-      d.setDate(d.getDate() + 1);
-      console.log(d);
-      */
+      
       let timeDate = [{}];
-      let dateTimeId;
-      // eslint-disable-next-line no-plusplus
+      let dateTimeId = [];
+      
       for (let x = 0; x < dayOfWeek.length; x++) {
         const cd = Date.now();
         const currentDate = new Date(cd);
         
         const sumForFirstDay = await getFirstDate(dayOfWeek[x], currentDate);
         
-        console.log(sumForFirstDay);
-        
         currentDate.setDate(currentDate.getDate() + sumForFirstDay);
         const mentorinDay1 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
         
-        console.log(mentorinDay1);
-
         currentDate.setDate(currentDate.getDate() + 7);
         const mentorinDay2 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
-
-        console.log(mentorinDay2);
 
         currentDate.setDate(currentDate.getDate() + 7);
         const mentorinDay3 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
@@ -70,53 +48,24 @@ module.exports = {
 
         timeDate = [
           {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentorinDay1,
-            times: [
-              {
-                hour: time[x],
-                flag: false,
-              },
-            ],
+            day: dayOfWeek[x], dayOfTheMonth: mentorinDay1,
+            times: [ { hour: time[x],  flagOcupado: false, }, ],
           },
           {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentorinDay2,
-            times: [
-              {
-                hour: time[x],
-                flag: false,
-              },
-            ],
+            day: dayOfWeek[x], dayOfTheMonth: mentorinDay2,
+            times: [ { hour: time[x], flagOcupado: false, }, ],
           },
           {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentorinDay3,
-            times: [
-              {
-                hour: time[x],
-                flag: false,
-              },
-            ],
+            day: dayOfWeek[x], dayOfTheMonth: mentorinDay3,
+            times: [ { hour: time[x], flagOcupado: false, }, ],
           },
           {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentorinDay4,
-            times: [
-              {
-                hour: time[x],
-                flag: false,
-              },
-            ],
+            day: dayOfWeek[x], dayOfTheMonth: mentorinDay4,
+            times: [ { hour: time[x], flagOcupado: false, }, ],
           },
         ];
-        dateTimeId = await (await dateTimeCollection.add({ timeDate })).id;
-        console.log(dateTimeId);
+        dateTimeId [x] = await (await dateTimeCollection.add({ timeDate })).id;
       }
-
-      //const dateTimeId = await (await dateTimeCollection.add({ timeDate })).id;
-
-      //console.log(dateTimeId);
 
       await mentoriaCollection.add({
         image,
@@ -125,7 +74,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        // flagDesativado: false,
+        flagDesativado: false,
         dateTime: dateTimeId,
       });
 
@@ -184,32 +133,3 @@ module.exports = {
     }
   },
 };
-
-// const timeDate = [
-//   {
-//     date: '15/05/2020',
-//     times: [
-//       {
-//         time: '11:00',
-//         flag: false,
-//       },
-//       {
-//         time: '12:00',
-//         flag: false,
-//       },
-//     ],
-//   },
-//   {
-//     date: '22/05/2020',
-//     times: [
-//       {
-//         time: '11:00',
-//         flag: false,
-//       },
-//       {
-//         time: '12:00',
-//         flag: false,
-//       },
-//     ],
-//   },
-// ];
