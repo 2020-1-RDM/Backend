@@ -2,18 +2,23 @@ import admin from '../../configs/database/connection';
 
 require('dotenv').config();
 
-const db = admin.firestore();                                                                                           
+const db = admin.firestore();
+
+async function getAll() {
+  const areasCollection = db.collection('area_conhecimento');
+  const result = [];
+  await areasCollection.get().then((snapshot) => {
+    return snapshot.forEach((res) => {
+      result.push(res.data());
+    });
+  });
+  return result;
+}
 
 module.exports = {
   async get(request, response) {
     try {
-      const areasCollection = db.collection('area_conhecimento');
-      const result = [];
-      await areasCollection.get().then((snapshot) => {
-        return snapshot.forEach((res) => {
-          result.push(res.data());
-        });
-      });
+      const result = await getAll();
       if (!result) {
         return response.status(404).json({ error: 'Não foi encontrado.' });
       }
@@ -24,6 +29,7 @@ module.exports = {
       });
     }
   },
+
   async insert(request, response) {
     try {
       const { name } = request.body;
