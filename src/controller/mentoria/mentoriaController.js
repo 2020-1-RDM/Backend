@@ -165,10 +165,6 @@ module.exports = {
 
   async deactivateMentoring(request, response) {
     try {
-      const {
-        flagDisable
-      } = request.body;
-
       const menthorID = request.tokenCpf;
       const id = request.params.id;
       const mentoringCollection = db.collection('mentoria');
@@ -176,7 +172,7 @@ module.exports = {
       if(!mentoring) { return response.status(404).send({ error: 'A mentoria não foi encontrada' }); }
 
       let flag = { }
-      flag.flagDisable = flagDisable ? flagDisable : mentoring.flagDisable;
+      flag.flagDisable = true;
     
       await mentoringCollection.doc(id).update(flag);
     
