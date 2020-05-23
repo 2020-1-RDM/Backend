@@ -20,54 +20,73 @@ module.exports = {
 
       const cpfSession = request.tokenCpf;
 
-      const mentoriaCollection = db.collection('mentoria');
+      const mentoringCollection = db.collection('mentoria');
 
       const dateTimeCollection = db.collection('dateTime');
-      
+
       let timeDate = [{}];
-      let dateTimeId = [];
-      
+      const dateTimeId = [];
+
       for (let x = 0; x < dayOfWeek.length; x++) {
         const cd = Date.now();
         const currentDate = new Date(cd);
-        
+
         const sumForFirstDay = await getFirstDate(dayOfWeek[x], currentDate);
-        
+
         currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-        const mentorinDay1 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
-        
-        currentDate.setDate(currentDate.getDate() + 7);
-        const mentorinDay2 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+        const mentoringDay1 = `${currentDate.getDate(
+          currentDate
+        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
+          currentDate
+        )}`;
 
         currentDate.setDate(currentDate.getDate() + 7);
-        const mentorinDay3 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+        const mentoringDay2 = `${currentDate.getDate(
+          currentDate
+        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
+          currentDate
+        )}`;
 
         currentDate.setDate(currentDate.getDate() + 7);
-        const mentorinDay4 = currentDate.getDate(currentDate) + '/' + currentDate.getMonth(currentDate) + '/' + currentDate.getFullYear(currentDate);
+        const mentoringDay3 = `${currentDate.getDate(
+          currentDate
+        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
+          currentDate
+        )}`;
 
+        currentDate.setDate(currentDate.getDate() + 7);
+        const mentoringDay4 = `${currentDate.getDate(
+          currentDate
+        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
+          currentDate
+        )}`;
 
         timeDate = [
           {
-            day: dayOfWeek[x], dayOfTheMonth: mentorinDay1,
-            times: [ { hour: time[x],  flagOcupado: false, }, ],
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentoringDay1,
+            times: [{ hour: time[x], flagOcupado: false }],
           },
           {
-            day: dayOfWeek[x], dayOfTheMonth: mentorinDay2,
-            times: [ { hour: time[x], flagOcupado: false, }, ],
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentoringDay2,
+            times: [{ hour: time[x], flagOcupado: false }],
           },
           {
-            day: dayOfWeek[x], dayOfTheMonth: mentorinDay3,
-            times: [ { hour: time[x], flagOcupado: false, }, ],
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentoringDay3,
+            times: [{ hour: time[x], flagOcupado: false }],
           },
           {
-            day: dayOfWeek[x], dayOfTheMonth: mentorinDay4,
-            times: [ { hour: time[x], flagOcupado: false, }, ],
+            day: dayOfWeek[x],
+            dayOfTheMonth: mentoringDay4,
+            times: [{ hour: time[x], flagOcupado: false }],
           },
         ];
-        dateTimeId [x] = await (await dateTimeCollection.add({ timeDate })).id;
+        dateTimeId[x] = await (await dateTimeCollection.add({ timeDate })).id;
       }
 
-      await mentoriaCollection.add({
+      await mentoringCollection.add({
         image,
         cpf: cpfSession,
         title,
@@ -88,9 +107,9 @@ module.exports = {
 
   async getMentoriaSession(request, response) {
     try {
-      const mentoriaCollection = db.collection('mentoria');
+      const mentoringCollection = db.collection('mentoria');
       const results = [];
-      await mentoriaCollection
+      await mentoringCollection
         .where('cpf', '==', request.tokenCpf)
         .get()
         .then((snapshot) => {
@@ -113,9 +132,9 @@ module.exports = {
 
   async getAll(request, response) {
     try {
-      const mentoriaCollection = db.collection('mentoria');
+      const mentoringCollection = db.collection('mentoria');
       const results = [];
-      await mentoriaCollection.get().then((snapshot) => {
+      await mentoringCollection.get().then((snapshot) => {
         snapshot.forEach((doc) => {
           results.push(doc.data());
         });
