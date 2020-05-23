@@ -3,27 +3,25 @@ import resizeImage from '../../helper/resizeImageHelper';
 
 const db = admin.firestore();
 
-async function getMentoriaById(request, response) {
-      const id = request.params.id;
-    
-      const mentorias = await getMentoriaMentor(request);
-      if (!mentorias) {
-        return response.status(400).send({ error: 'Mentoria não existe' });
+async function getMentoringById(id, menthorID) {
+      const mentorings = await getMentoringByMenthor(menthorID);
+      if (!mentorings) {
+        return null;
       }
       
-      let mentoria = mentorias.filter(m => {
+      let mentoring = mentorings.filter(m => {
         return m.id === id;
       })[0].data;
 
-      return mentoria;
+      return mentoring;
 }
 
-async function getMentoriaMentor(request, response) {
+async function getMentoringByMenthor(menthorID) {
   try {
-    const mentoriaCollection = db.collection('mentoria');
+    const mentoringCollection = db.collection('mentoria');
     const results = [];
-    await mentoriaCollection
-      .where('cpf', '==', request.tokenCpf)
+    await mentoringCollection
+      .where('cpf', '==', menthorID)
       .get()
       .then((snapshot) => {
         snapshot.forEach((doc) => {
@@ -57,9 +55,9 @@ module.exports = {
 
       const cpfSession = request.tokenCpf;
 
-      const mentoriaCollection = db.collection('mentoria');
+      const mentoringCollection = db.collection('mentoria');
 
-      await mentoriaCollection.add({
+      await mentoringCollection.add({
         image,
         cpf: cpfSession,
         title,
@@ -78,11 +76,11 @@ module.exports = {
     }
   },
 
-  async getMentoriaSession(request, response) {
+  async getMentoringBySession(request, response) {
     try {
-      const mentoriaCollection = db.collection('mentoria');
+      const mentoringCollection = db.collection('mentoria');
       const results = [];
-      await mentoriaCollection
+      await mentoringCollection
         .where('cpf', '==', request.tokenCpf)
         .get()
         .then((snapshot) => {
@@ -105,9 +103,9 @@ module.exports = {
 
   async getAll(request, response) {
     try {
-      const mentoriaCollection = db.collection('mentoria');
+      const mentoringCollection = db.collection('mentoria');
       const results = [];
-      await mentoriaCollection.get().then((snapshot) => {
+      await mentoringCollection.get().then((snapshot) => {
         snapshot.forEach((doc) => {
           results.push(doc.data());
         });
@@ -125,7 +123,7 @@ module.exports = {
     }
   },
 
-  async updateMentoria(request, response) {
+  async updateMentoring(request, response) {
     try {
       const {
         title,
@@ -135,10 +133,13 @@ module.exports = {
         dayOfWeek,
         time,
       } = request.body;
-
+      const menthorID = request.tokenCpf;
+      const id = request.params.id;
       const image = await resizeImage(request.file);
-      const mentoriaCollection = db.collection('mentoria');
-      const mentoria = await getMentoriaById(request);
+      const mentoringCollection = db.collection('mentoria');
+      const mentoring = await getMentoringById(id, menthorID);
+      if(!mentoring) { return response.status(404).send({ error: 'A mentoria não foi encontrada' }); }
+
 
       let update = { }
       update.title = title && title != mentoria.title ? title : mentoria.title;
@@ -150,7 +151,7 @@ module.exports = {
       update.time = time && time != mentoria.time ? time : mentoria.time;
       update.image = image ? image : mentoria.image;
 
-      await mentoriaCollection.doc(id).update(update);
+      await mentoringCollection.doc(id).update(update);
     
       return response
         .status(200)
@@ -162,20 +163,22 @@ module.exports = {
     }
   },
 
-  async deactivateMentoria(request, response) {
+  async deactivateMentoring(request, response) {
     try {
       const {
-        flagDesativado
+        flagDisable
       } = request.body;
 
+      const menthorID = request.tokenCpf;
       const id = request.params.id;
-      const mentoriaCollection = db.collection('mentoria');
-      const mentoria = await getMentoriaById(request);
+      const mentoringCollection = db.collection('mentoria');
+      const mentoring = await getMentoringById(id, menthorID);
+      if(!mentoring) { return response.status(404).send({ error: 'A mentoria não foi encontrada' }); }
 
       let flag = { }
-      flag.flagDesativado = flagDesativado ? flagDesativado : mentoria.flagDesativado;
+      flag.flagDisable = flagDisable ? flagDisable : mentoring.flagDisable;
     
-      await mentoriaCollection.doc(id).update(flag);
+      await mentoringCollection.doc(id).update(flag);
     
       return response
         .status(200)
