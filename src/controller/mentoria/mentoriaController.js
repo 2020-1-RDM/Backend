@@ -93,7 +93,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        flagDesativado: false,
+        flagDisable: false,
         dateTime: dateTimeId,
       });
 
