@@ -61,18 +61,18 @@ routes.get('/mentoriaAll', authMiddleware, mentoriaController.getAll);
 routes.get(
   '/mentoriaSession',
   authMiddleware,
-  mentoriaController.getMentoriaSession
+  mentoriaController.getMentoringBySession
 );
 routes.put(
   '/mentoria/alter/:id',
   upload.single('image'),
   authMiddleware,
-  mentoriaController.updateMentoria
+  mentoriaController.updateMentoring
 );
 routes.put(
   '/mentoria/deactivate/:id',
   authMiddleware,
-  mentoriaController.deactivateMentoria
+  mentoriaController.deactivateMentoring
 );
 
 export default routes;

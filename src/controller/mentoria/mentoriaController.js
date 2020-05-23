@@ -66,6 +66,7 @@ module.exports = {
         mentoringOption,
         dateTime,
         dayOfWeek,
+        flagDisable: false
       });
 
       return response.status(200).send({ success: true });
@@ -82,10 +83,13 @@ module.exports = {
       const results = [];
       await mentoringCollection
         .where('cpf', '==', request.tokenCpf)
+        // .and('flagDisable', '==', 'false')
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
-            results.push(doc.data());
+            results.push({
+              id: doc.id,
+              data: doc.data()});
           });
         });
       if (!results.length) {
