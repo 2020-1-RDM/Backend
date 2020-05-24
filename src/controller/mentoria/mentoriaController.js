@@ -136,9 +136,12 @@ module.exports = {
         dayOfWeek,
         time,
       } = request.body;
+      let image;
+      if(request.file) {
+        image = await resizeImage(request.file);
+      }
       const menthorID = request.tokenCpf;
       const id = request.params.id;
-      const image = await resizeImage(request.file);
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoringById(id, menthorID);
       if(!mentoring) { return response.status(404).send({ error: 'A mentoria não foi encontrada' }); }
@@ -151,7 +154,7 @@ module.exports = {
       update.mentoringOption = mentoringOption && mentoringOption != mentoring.mentoringOption ? mentoringOption : mentoring.mentoringOption;
       update.dayOfWeek = dayOfWeek && dayOfWeek != mentoring.dayOfWeek ? dayOfWeek : mentoring.dayOfWeek;
       update.time = time && time != mentoring.time ? time : mentoring.time;
-      update.image = image ? image : mentoring.image;
+      update.image = image && image != mentoring.image ? image : mentoring.image;
 
       await mentoringCollection.doc(id).update(update);
     
