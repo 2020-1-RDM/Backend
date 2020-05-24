@@ -1,17 +1,30 @@
 import admin from '../../configs/database/connection';
+import { checkAreaMentorings } from '../mentoria/mentoriaController';
 
 require('dotenv').config();
 
 const db = admin.firestore();
 
+async function filterValidKnowledgeAreas(knowledgAreas){
+  const filteredResult = []
+  for (let i = 0; i < knowledgAreas.length; i += 1){
+    console.log(knowledgAreas[i]);
+    if (await checkAreaMentorings(knowledgAreas[i].name)){
+      filteredResult.push(knowledgAreas[i]);
+    }
+  }
+  return filteredResult;
+}
+
 async function getAll() {
   const areasCollection = db.collection('area_conhecimento');
-  const result = [];
+  let result = [];
   await areasCollection.get().then((snapshot) => {
     return snapshot.forEach((res) => {
       result.push(res.data());
     });
   });
+  result = await filterValidKnowledgeAreas(result);
   return result;
 }
 
