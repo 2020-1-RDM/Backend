@@ -11,7 +11,7 @@ async function getMentoringById(id, menthorID) {
       let mentoring = mentorings.filter(m => {
         return m.id === id;
       })[0].data;
-
+      
       return mentoring;
 }
 
@@ -81,7 +81,7 @@ module.exports = {
       const results = [];
       await mentoringCollection
         .where('cpf', '==', request.tokenCpf)
-        .where('flagDisable', '==', 'false')
+        .where('flagDisable', '==', false)
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
@@ -90,6 +90,7 @@ module.exports = {
               data: doc.data()});
           });
         });
+        console.log(results);
       if (!results.length) {
         return response
           .status(400)
@@ -144,14 +145,13 @@ module.exports = {
 
 
       let update = { }
-      update.title = title && title != mentoria.title ? title : mentoria.title;
-      update.description = description && description != mentoria.description ? description : mentoria.description;
-      update.knowledgeArea = knowledgeArea && knowledgeArea != mentoria.knowledgeArea ? knowledgeArea : mentoria.knowledgeArea;
-      update.mentoringOption = mentoringOption && mentoringOption != mentoria.mentoringOption ? mentoringOption : mentoria.mentoringOption;
-      update.dateTime = dateTime && dateTime != mentoria.dateTime ? dateTime : mentoria.dateTime;
-      update.dayOfWeek = dayOfWeek && dayOfWeek != mentoria.dayOfWeek ? dayOfWeek : mentoria.dayOfWeek;
-      update.time = time && time != mentoria.time ? time : mentoria.time;
-      update.image = image ? image : mentoria.image;
+      update.title = title && title != mentoring.title ? title : mentoring.title;
+      update.description = description && description != mentoring.description ? description : mentoring.description;
+      update.knowledgeArea = knowledgeArea && knowledgeArea != mentoring.knowledgeArea ? knowledgeArea : mentoring.knowledgeArea;
+      update.mentoringOption = mentoringOption && mentoringOption != mentoring.mentoringOption ? mentoringOption : mentoring.mentoringOption;
+      update.dayOfWeek = dayOfWeek && dayOfWeek != mentoring.dayOfWeek ? dayOfWeek : mentoring.dayOfWeek;
+      update.time = time && time != mentoring.time ? time : mentoring.time;
+      update.image = image ? image : mentoring.image;
 
       await mentoringCollection.doc(id).update(update);
     

@@ -69,7 +69,7 @@ routes.put(
   authMiddleware,
   mentoriaController.updateMentoring
 );
-routes.put(
+routes.delete(
   '/mentoria/deactivate/:id',
   authMiddleware,
   mentoriaController.deactivateMentoring
