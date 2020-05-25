@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const db = admin.firestore();
 
-async function getAllMentoting() {
+async function getAllMentoring() {
   const mentoriaCollection = db.collection('mentoria');
   const results = [];
   await mentoriaCollection.get().then((snapshot) => {
@@ -17,7 +17,7 @@ async function getAllMentoting() {
 
 async function filterValidKnowledgeAreas(knowledgAreas) {
   const filteredResult = [];
-  const allMentorings = await getAllMentoting();
+  const allMentorings = await getAllMentoring();
   for (let i = 0; i < knowledgAreas.length; i += 1) {
     for (let j = 0; j < allMentorings.length; j += 1) {
       if (knowledgAreas[i].name === allMentorings[j].knowledgeArea) {
