@@ -1,5 +1,6 @@
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import getFirstDate from '../../helper/firstMetoringHelper';
 
 const db = admin.firestore();
 
@@ -46,15 +47,51 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dateTime,
-        dayOfWeek,
+        dayOfWeek = [],
+        time = [],
       } = request.body;
+
+      const signalFlag = false;
 
       const image = await resizeImage(request.file);
 
       const cpfSession = request.tokenCpf;
 
       const mentoringCollection = db.collection('mentoria');
+
+      const dateTimeCollection = db.collection('dateTime');
+
+      const timeDate = [{}];
+      const dateTimeId = [];
+
+      // controls the number of weeks to be scheduled
+      const weeksController = 4;
+
+      for (let i = 0; i < dayOfWeek.length; i += 1) {
+        const currentDate = new Date();
+
+        // eslint-disable-next-line no-await-in-loop
+        let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
+
+        for (let j = 0; j < weeksController; j += 1) {
+          if (j !== 0) {
+            sumForFirstDay = 7;
+          }
+          currentDate.setDate(currentDate.getDate() + sumForFirstDay);
+
+          const mentoringDay = `${currentDate.getDate(currentDate)}/${
+            currentDate.getMonth(currentDate) + 1
+          }/${currentDate.getFullYear(currentDate)}`;
+
+          timeDate[j] = {
+            day: dayOfWeek[i],
+            dayOfTheMonth: mentoringDay,
+            times: [{ hour: time[i], flagBusy: false }],
+          };
+        }
+        // eslint-disable-next-line no-await-in-loop
+        dateTimeId[i] = (await dateTimeCollection.add({ timeDate })).id;
+      }
 
       await mentoringCollection.add({
         image,
@@ -63,8 +100,8 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dateTime,
-        dayOfWeek,
+        flagDisable: signalFlag,
+        dateTime: dateTimeId,
       });
 
       return response.status(200).send({ success: true });
