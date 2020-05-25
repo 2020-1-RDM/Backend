@@ -3,18 +3,6 @@ import resizeImage from '../../helper/resizeImageHelper';
 
 const db = admin.firestore();
 
-async function getMentoringById(id, menthorID) {
-      const mentorings = await getMentoringByMenthor(menthorID);
-      if (!mentorings) {
-        return null;
-      }
-      let mentoring = mentorings.filter(m => {
-        return m.id === id;
-      })[0].data;
-      
-      return mentoring;
-}
-
 async function getMentoringByMenthor(menthorID) {
   try {
     const mentoringCollection = db.collection('mentoria');
@@ -26,7 +14,8 @@ async function getMentoringByMenthor(menthorID) {
         snapshot.forEach((doc) => {
           results.push({
             id: doc.id,
-            data: doc.data()});
+            data: doc.data(),
+          });
         });
       });
     if (!results.length) {
@@ -36,7 +25,18 @@ async function getMentoringByMenthor(menthorID) {
   } catch (e) {
     return null;
   }
-};
+}
+
+async function getMentoringById(id, menthorID) {
+  const mentorings = await getMentoringByMenthor(menthorID);
+  if (!mentorings) {
+    return null;
+  }
+  const mentoring = mentorings.filter((m) => {
+    return m.id === id;
+  })[0].data;
+  return mentoring;
+}
 
 module.exports = {
   async insert(request, response) {
@@ -87,10 +87,11 @@ module.exports = {
           snapshot.forEach((doc) => {
             results.push({
               id: doc.id,
-              data: doc.data()});
+              data: doc.data(),
+            });
           });
         });
-        console.log(results);
+      console.log(results);
       if (!results.length) {
         return response
           .status(400)
@@ -137,30 +138,49 @@ module.exports = {
         time,
       } = request.body;
       let image;
-      if(request.file) {
+      if (request.file) {
         image = await resizeImage(request.file);
       }
       const menthorID = request.tokenCpf;
-      const id = request.params.id;
+      const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoringById(id, menthorID);
-      if(!mentoring) { return response.status(404).send({ error: 'A mentoria não foi encontrada' }); }
+      if (!mentoring) {
+        return response
+          .status(404)
+          .send({ error: 'A mentoria não foi encontrada' });
+      }
 
-
-      let update = { }
-      update.title = title && title != mentoring.title ? title : mentoring.title;
-      update.description = description && description != mentoring.description ? description : mentoring.description;
-      update.knowledgeArea = knowledgeArea && knowledgeArea != mentoring.knowledgeArea ? knowledgeArea : mentoring.knowledgeArea;
-      update.mentoringOption = mentoringOption && mentoringOption != mentoring.mentoringOption ? mentoringOption : mentoring.mentoringOption;
-      update.dayOfWeek = dayOfWeek && dayOfWeek != mentoring.dayOfWeek ? dayOfWeek : mentoring.dayOfWeek;
-      update.time = time && time != mentoring.time ? time : mentoring.time;
-      update.image = image && image != mentoring.image ? image : mentoring.image;
+      const update = {};
+      update.title =
+        title && title !== mentoring.title ? title : mentoring.title;
+      update.description =
+        description && description !== mentoring.description
+          ? description
+          : mentoring.description;
+      update.knowledgeArea =
+        knowledgeArea && knowledgeArea !== mentoring.knowledgeArea
+          ? knowledgeArea
+          : mentoring.knowledgeArea;
+      update.mentoringOption =
+        mentoringOption && mentoringOption !== mentoring.mentoringOption
+          ? mentoringOption
+          : mentoring.mentoringOption;
+      update.dayOfWeek =
+        dayOfWeek && dayOfWeek !== mentoring.dayOfWeek
+          ? dayOfWeek
+          : mentoring.dayOfWeek;
+      update.time = time && time !== mentoring.time ? time : mentoring.time;
+      update.image =
+        image && image !== mentoring.image ? image : mentoring.image;
 
       await mentoringCollection.doc(id).update(update);
-    
-      return response
-        .status(200)
-        .send({ success: true, msg: 'Mentoria atualizada com sucesso', data: update });
+
+      return response.status(200).send({
+        success: true,
+        msg: 'Mentoria atualizada com sucesso',
+        data: update,
+      });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar mentoria : ${e}`,
@@ -171,23 +191,27 @@ module.exports = {
   async deactivateMentoring(request, response) {
     try {
       const menthorID = request.tokenCpf;
-      const id = request.params.id;
+      const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoringById(id, menthorID);
-      if(!mentoring) { return response.status(404).send({ error: 'A mentoria não foi encontrada' }); }
+      if (!mentoring) {
+        return response
+          .status(404)
+          .send({ error: 'A mentoria não foi encontrada' });
+      }
 
-      let flag = { }
+      const flag = {};
       flag.flagDisable = true;
-    
+
       await mentoringCollection.doc(id).update(flag);
-    
+
       return response
         .status(200)
-        .send({ success: true, msg: 'Mentoria desativada'});
+        .send({ success: true, msg: 'Mentoria desativada' });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao desativar mentoria : ${e}`,
       });
     }
-  }
+  },
 };
