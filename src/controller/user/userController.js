@@ -48,6 +48,33 @@ async function getUser(email) {
 
 // Auxiliary create functions
 
+// Adds menthor data to an existing user of type mentee
+async function addMenthorData(newData, response) {
+  try {
+    const { linkedin, areas, userId, userCollection } = newData;
+
+    await verifyArea(areas);
+
+    if (linkedin) {
+      await userCollection.doc(userId).update({ linkedin });
+    }
+    if (areas) {
+      await userCollection.doc(userId).update({ areas });
+    }
+
+    const currentUserType = userType.BOTH;
+    await userCollection.doc(userId).update({ userType: currentUserType });
+
+    return response
+      .status(200)
+      .send({ success: true, msg: 'Usuário atualizado com sucesso' });
+  } catch (e) {
+    return response.status.status(500).json({
+      error: `Erro ao atualizar usuário : ${e}`,
+    });
+  }
+}
+
 // Inserting new menthor
 async function newMenthor(request, response) {
   try {
@@ -106,18 +133,16 @@ async function newMenthor(request, response) {
   }
 }
 
-// Adds menthor data to an existing user of type mentee
-async function addMenthorData(newData, response) {
+// Adds mentee data to an existing user of type menthor
+async function addMenteeData(newData, response) {
   try {
-    const { linkedin, areas, userId, userCollection } = newData;
+    const { birthDate, registration, userId, userCollection } = newData;
 
-    await verifyArea(areas);
-
-    if (linkedin) {
-      await userCollection.doc(userId).update({ linkedin });
+    if (birthDate) {
+      await userCollection.doc(userId).update({ birthDate });
     }
-    if (areas) {
-      await userCollection.doc(userId).update({ areas });
+    if (registration) {
+      await userCollection.doc(userId).update({ registration });
     }
 
     const currentUserType = userType.BOTH;
@@ -197,31 +222,6 @@ async function newtMentee(request, response) {
   }
 }
 
-// Adds mentee data to an existing user of type menthor
-async function addMenteeData(newData, response) {
-  try {
-    const { birthDate, registration, userId, userCollection } = newData;
-
-    if (birthDate) {
-      await userCollection.doc(userId).update({ birthDate });
-    }
-    if (registration) {
-      await userCollection.doc(userId).update({ registration });
-    }
-
-    const currentUserType = userType.BOTH;
-    await userCollection.doc(userId).update({ userType: currentUserType });
-
-    return response
-      .status(200)
-      .send({ success: true, msg: 'Usuário atualizado com sucesso' });
-  } catch (e) {
-    return response.status.status(500).json({
-      error: `Erro ao atualizar usuário : ${e}`,
-    });
-  }
-}
-
 // Exported functions
 module.exports = {
   async get(request, response) {
@@ -238,8 +238,10 @@ module.exports = {
       });
     }
   },
+  // eslint-disable-next-line consistent-return
   async insert(request, response) {
     try {
+      // eslint-disable-next-line radix
       const flag = parseInt(request.body.flag);
 
       if (flag === userType.MENTHOR) {
@@ -270,8 +272,10 @@ module.exports = {
         phone,
         areas,
       } = request.body;
-
-      const image = await resizeImage(request.file);
+      let image;
+      if (request.file) {
+        image = await resizeImage(request.file);
+      }
 
       const userCollection = db.collection('user');
 
@@ -285,6 +289,8 @@ module.exports = {
 
       await verifyArea(areas);
 
+      const newImage = image && image !== user.image ? image : user.image;
+
       await userCollection.doc(user.id).update({
         password: passwordHash,
         name,
@@ -293,7 +299,7 @@ module.exports = {
         linkedin,
         email,
         userType: flag,
-        image,
+        image: newImage,
         areas: resultArea,
       });
 
