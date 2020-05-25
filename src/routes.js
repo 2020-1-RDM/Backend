@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import userController from './controller/user/userController';
-import areaConhecimentoController from './controller/areas_conhecimento/areasConhecimentoController';
+import knowledgeAreasController from './controller/knowledgeAreas/knowledgeAreasController';
 import sessionController from './controller/session/sessionController';
 import mentoriaController from './controller/mentoria/mentoriaController';
 
@@ -15,18 +15,30 @@ routes.get('/ping', (req, res) => res.json({ message: 'pong' }));
 /*
    Routes of autoconhecimento
  */
-routes.get('/areaConhecimento', areaConhecimentoController.get);
-routes.post('/areaConhecimento', areaConhecimentoController.insert);
-routes.put('/areaConhecimento', areaConhecimentoController.update);
-routes.delete('/areaConhecimento', areaConhecimentoController.delete);
+routes.get('/areaConhecimento', authMiddleware, knowledgeAreasController.get);
+routes.post(
+  '/areaConhecimento',
+  authMiddleware,
+  knowledgeAreasController.insert
+);
+routes.put(
+  '/areaConhecimento',
+  authMiddleware,
+  knowledgeAreasController.update
+);
+routes.delete(
+  '/areaConhecimento',
+  authMiddleware,
+  knowledgeAreasController.delete
+);
 
 routes.post(
   '/areaConhecimento/integrate',
-  areaConhecimentoController.integrateUserArea
+  knowledgeAreasController.integrateUserArea
 );
 routes.post(
   '/areaConhecimento/deintegrate',
-  areaConhecimentoController.deintegrateUserArea
+  knowledgeAreasController.deintegrateUserArea
 );
 
 /*

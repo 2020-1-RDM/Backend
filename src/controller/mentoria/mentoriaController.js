@@ -86,25 +86,4 @@ module.exports = {
       });
     }
   },
-
-  async checkAreaMentorings(knowledgeArea) {
-    const areaCollection = db.collection('mentoria');
-    let area = null;
-    await areaCollection
-      .where('knowledgeArea', '==', knowledgeArea)
-      .get()
-      .then((snapshot) => {
-        return snapshot.forEach((res) => {
-          area = {
-            id: res.id,
-            data: res.data(),
-          };
-        });
-      });
-    console.log(area)
-    if (!area) {
-      return false;
-    }
-    return true;
-  },
 };

@@ -41,7 +41,7 @@ async function getAll() {
 }
 
 module.exports = {
-  async get(response) {
+  async get(request, response) {
     try {
       const result = await getAll();
       if (!result) {
