@@ -5,12 +5,25 @@ require('dotenv').config();
 
 const db = admin.firestore();
 
-async function filterValidKnowledgeAreas(knowledgAreas){
-  const filteredResult = []
-  for (let i = 0; i < knowledgAreas.length; i += 1){
-    console.log(knowledgAreas[i]);
-    if (await checkAreaMentorings(knowledgAreas[i].name)){
-      filteredResult.push(knowledgAreas[i]);
+async function getAllMentoting() {
+  const mentoriaCollection = db.collection('mentoria');
+  const results = [];
+  await mentoriaCollection.get().then((snapshot) => {
+    snapshot.forEach((doc) => {
+      results.push(doc.data());
+    });
+  });
+  return results;
+}
+
+async function filterValidKnowledgeAreas(knowledgAreas) {
+  const filteredResult = [];
+  const allMentorings = await getAllMentoting();
+  for (let i = 0; i < knowledgAreas.length; i += 1) {
+    for (let j = 0; j < allMentorings.length; j += 1) {
+      if (knowledgAreas[i].name === allMentorings[j].knowledgeArea) {
+        filteredResult.push(knowledgAreas[i]);
+      }
     }
   }
   return filteredResult;
