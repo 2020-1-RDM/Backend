@@ -91,7 +91,6 @@ module.exports = {
             });
           });
         });
-      console.log(results);
       if (!results.length) {
         return response
           .status(400)
