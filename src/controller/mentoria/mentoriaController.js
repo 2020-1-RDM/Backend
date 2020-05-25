@@ -27,7 +27,7 @@ module.exports = {
       let timeDate = [{}];
       const dateTimeId = [];
 
-      for (let x = 0; x < dayOfWeek.length; x++) {
+      for (let x = 0; x < dayOfWeek.length; x += 1) {
         const cd = Date.now();
         const currentDate = new Date(cd);
 
@@ -36,7 +36,7 @@ module.exports = {
         currentDate.setDate(currentDate.getDate() + sumForFirstDay);
         const mentoringDay1 = `${currentDate.getDate(
           currentDate
-        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
+        )}/${currentDate.getMonth(currentDate)+1}/${currentDate.getFullYear(
           currentDate
         )}`;
 
