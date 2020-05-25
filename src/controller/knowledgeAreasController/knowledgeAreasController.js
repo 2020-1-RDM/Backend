@@ -1,5 +1,4 @@
 import admin from '../../configs/database/connection';
-import { checkAreaMentorings } from '../mentoria/mentoriaController';
 
 require('dotenv').config();
 
@@ -30,9 +29,9 @@ async function filterValidKnowledgeAreas(knowledgAreas) {
 }
 
 async function getAll() {
-  const areasCollection = db.collection('area_conhecimento');
+  const knowledgeAreasCollection = db.collection('area_conhecimento');
   let result = [];
-  await areasCollection.get().then((snapshot) => {
+  await knowledgeAreasCollection.get().then((snapshot) => {
     return snapshot.forEach((res) => {
       result.push(res.data());
     });
@@ -42,7 +41,7 @@ async function getAll() {
 }
 
 module.exports = {
-  async get(request, response) {
+  async get(response) {
     try {
       const result = await getAll();
       if (!result) {
@@ -51,7 +50,7 @@ module.exports = {
       return response.status(200).send(result);
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
@@ -60,10 +59,10 @@ module.exports = {
     try {
       const { name } = request.body;
 
-      const areaCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
 
       let idArea = null;
-      await areaCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
@@ -77,7 +76,7 @@ module.exports = {
           .send({ error: 'Área de conhecimento já existe.' });
       }
 
-      await areaCollection.add({
+      await knowledgeAreasCollection.add({
         name,
       });
       return response.status(201).send();
@@ -92,10 +91,10 @@ module.exports = {
       // eslint-disable-next-line prefer-const
       let { name, newName } = request.body;
 
-      const areaCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
 
       let idArea = null;
-      await areaCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
@@ -109,7 +108,7 @@ module.exports = {
           .send({ error: 'Área de conhecimento não existe.' });
       }
       name = newName;
-      await areaCollection.doc(idArea).set({
+      await knowledgeAreasCollection.doc(idArea).set({
         name,
       });
       return response.status(200).send();
@@ -123,10 +122,10 @@ module.exports = {
     try {
       const { name } = request.body;
 
-      const areaCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
 
       let idArea = null;
-      await areaCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
@@ -138,7 +137,7 @@ module.exports = {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
-      await areaCollection.doc(idArea).delete();
+      await knowledgeAreasCollection.doc(idArea).delete();
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({
@@ -154,12 +153,12 @@ module.exports = {
           .status(404)
           .json({ error: 'Não foi encontrado esse usuário' });
       }
-      const areasCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
       const userCollection = db.collection('user');
       let resultArea = null;
       let resultUser = null;
       const listAreas = new Set();
-      await areasCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
