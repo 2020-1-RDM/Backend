@@ -15,7 +15,12 @@ routes.get('/ping', (req, res) => res.json({ message: 'pong' }));
 /*
    Routes of autoconhecimento
  */
-routes.get('/areaConhecimento', authMiddleware, knowledgeAreasController.get);
+routes.get('/areasDisponiveis', authMiddleware, knowledgeAreasController.get);
+routes.get(
+  '/areaConhecimento',
+  authMiddleware,
+  knowledgeAreasController.getValid
+);
 routes.post(
   '/areaConhecimento',
   authMiddleware,

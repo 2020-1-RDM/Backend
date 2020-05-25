@@ -22,6 +22,7 @@ async function filterValidKnowledgeAreas(knowledgAreas) {
     for (let j = 0; j < allMentorings.length; j += 1) {
       if (knowledgAreas[i].name === allMentorings[j].knowledgeArea) {
         filteredResult.push(knowledgAreas[i]);
+        break;
       }
     }
   }
@@ -30,13 +31,12 @@ async function filterValidKnowledgeAreas(knowledgAreas) {
 
 async function getAll() {
   const knowledgeAreasCollection = db.collection('area_conhecimento');
-  let result = [];
+  const result = [];
   await knowledgeAreasCollection.get().then((snapshot) => {
     return snapshot.forEach((res) => {
       result.push(res.data());
     });
   });
-  result = await filterValidKnowledgeAreas(result);
   return result;
 }
 
@@ -44,6 +44,22 @@ module.exports = {
   async get(request, response) {
     try {
       const result = await getAll();
+      if (!result) {
+        return response.status(404).json({ error: 'Não foi encontrado.' });
+      }
+      return response.status(200).send(result);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
+
+  async getValid(request, response) {
+    try {
+      let result = await getAll();
+      result = await filterValidKnowledgeAreas(result);
+      console.log(result);
       if (!result) {
         return response.status(404).json({ error: 'Não foi encontrado.' });
       }
