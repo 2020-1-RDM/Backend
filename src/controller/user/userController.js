@@ -270,8 +270,10 @@ module.exports = {
         phone,
         areas,
       } = request.body;
-
-      const image = await resizeImage(request.file);
+      let image;
+      if(request.file) {
+        image = await resizeImage(request.file);
+      }
 
       const userCollection = db.collection('user');
 
@@ -285,6 +287,8 @@ module.exports = {
 
       await verifyArea(areas);
 
+      newImage = image && image != user.image ? image : user.image;
+      
       await userCollection.doc(user.id).update({
         password: passwordHash,
         name,
@@ -293,7 +297,7 @@ module.exports = {
         linkedin,
         email,
         userType: flag,
-        image,
+        image: newImage,
         areas: resultArea,
       });
 
