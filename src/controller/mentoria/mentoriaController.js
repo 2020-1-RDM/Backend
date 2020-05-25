@@ -16,6 +16,8 @@ module.exports = {
         time = [],
       } = request.body;
 
+      const signalFlag = false;
+
       const image = await resizeImage(request.file);
 
       const cpfSession = request.tokenCpf;
@@ -24,66 +26,36 @@ module.exports = {
 
       const dateTimeCollection = db.collection('dateTime');
 
-      let timeDate = [{}];
+      const timeDate = [{}];
       const dateTimeId = [];
 
-      for (let x = 0; x < dayOfWeek.length; x++) {
-        const cd = Date.now();
-        const currentDate = new Date(cd);
+      // controls the number of weeks to be scheduled
+      const weeksController = 4;
 
-        const sumForFirstDay = await getFirstDate(dayOfWeek[x], currentDate);
+      for (let i = 0; i < dayOfWeek.length; i += 1) {
+        const currentDate = new Date();
 
-        currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-        const mentoringDay1 = `${currentDate.getDate(
-          currentDate
-        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
-          currentDate
-        )}`;
+        // eslint-disable-next-line no-await-in-loop
+        let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
 
-        currentDate.setDate(currentDate.getDate() + 7);
-        const mentoringDay2 = `${currentDate.getDate(
-          currentDate
-        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
-          currentDate
-        )}`;
+        for (let j = 0; j < weeksController; j += 1) {
+          if (j !== 0) {
+            sumForFirstDay = 7;
+          }
+          currentDate.setDate(currentDate.getDate() + sumForFirstDay);
 
-        currentDate.setDate(currentDate.getDate() + 7);
-        const mentoringDay3 = `${currentDate.getDate(
-          currentDate
-        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
-          currentDate
-        )}`;
+          const mentoringDay = `${currentDate.getDate(currentDate)}/${
+            currentDate.getMonth(currentDate) + 1
+          }/${currentDate.getFullYear(currentDate)}`;
 
-        currentDate.setDate(currentDate.getDate() + 7);
-        const mentoringDay4 = `${currentDate.getDate(
-          currentDate
-        )}/${currentDate.getMonth(currentDate)}/${currentDate.getFullYear(
-          currentDate
-        )}`;
-
-        timeDate = [
-          {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentoringDay1,
-            times: [{ hour: time[x], flagOcupado: false }],
-          },
-          {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentoringDay2,
-            times: [{ hour: time[x], flagOcupado: false }],
-          },
-          {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentoringDay3,
-            times: [{ hour: time[x], flagOcupado: false }],
-          },
-          {
-            day: dayOfWeek[x],
-            dayOfTheMonth: mentoringDay4,
-            times: [{ hour: time[x], flagOcupado: false }],
-          },
-        ];
-        dateTimeId[x] = await (await dateTimeCollection.add({ timeDate })).id;
+          timeDate[j] = {
+            day: dayOfWeek[i],
+            dayOfTheMonth: mentoringDay,
+            times: [{ hour: time[i], flagBusy: false }],
+          };
+        }
+        // eslint-disable-next-line no-await-in-loop
+        dateTimeId[i] = (await dateTimeCollection.add({ timeDate })).id;
       }
 
       await mentoringCollection.add({
@@ -93,7 +65,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        flagDisable: false,
+        flagDisable: signalFlag,
         dateTime: dateTimeId,
       });
 

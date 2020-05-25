@@ -13,9 +13,9 @@ async function getFirstDate(dayOfWeek, currentDate) {
     'Sabado',
   ];
 
-  for (let i = 1; i < dayName.length; i++) {
+  for (let i = 1; i < dayName.length; i += 1) {
     if (dayOfWeek === dayName[i]) {
-      for (let j = 0; j < dayName.length; j++) {
+      for (let j = 0; j < dayName.length; j += 1) {
         if (currentDayWeek === j) {
           if (currentDayWeek < i) {
             sumForFirstDay = i - currentDayWeek;
