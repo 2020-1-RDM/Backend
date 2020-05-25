@@ -59,7 +59,6 @@ module.exports = {
     try {
       let result = await getAll();
       result = await filterValidKnowledgeAreas(result);
-      console.log(result);
       if (!result) {
         return response.status(404).json({ error: 'Não foi encontrado.' });
       }
