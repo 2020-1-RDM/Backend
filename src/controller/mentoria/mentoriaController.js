@@ -39,6 +39,27 @@ async function getMentoringById(id, menthorID) {
   return mentoring;
 }
 
+async function getUser(cpf) {
+  const userCollection = db.collection('user');
+  let user = null;
+  await userCollection
+    .where('cpf', '==', cpf)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        user = {
+          id: res.id,
+          data: res.data(),
+        };
+      });
+    });
+
+  if (!user) {
+    return null;
+  }
+  return user;
+}
+
 module.exports = {
   async insert(request, response) {
     try {
@@ -64,13 +85,11 @@ module.exports = {
       const timeDate = [{}];
       const dateTimeId = [];
 
-      // controls the number of weeks to be scheduled
       const weeksController = 4;
 
       for (let i = 0; i < dayOfWeek.length; i += 1) {
         const currentDate = new Date();
 
-        // eslint-disable-next-line no-await-in-loop
         let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
 
         for (let j = 0; j < weeksController; j += 1) {
@@ -89,7 +108,6 @@ module.exports = {
             times: [{ hour: time[i], flagBusy: false }],
           };
         }
-        // eslint-disable-next-line no-await-in-loop
         dateTimeId[i] = (await dateTimeCollection.add({ timeDate })).id;
       }
 
@@ -144,17 +162,46 @@ module.exports = {
   async getAll(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
+
+      const cpfMentores= []
+      await mentoringCollection.get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          cpfMentores.push(doc.data().cpf);
+        });
+      });
+
+      const nomesMentores = [];
+      let aux;
+      for (let x = 0; x < cpfMentores.length; x++){
+        aux = await getUser(cpfMentores[x]);
+        nomesMentores[x] = aux.data.name;
+      }
+
+      const imagensMentores = [];
+      for (let x = 0; x < cpfMentores.length; x++){
+        aux = await getUser(cpfMentores[x]);
+        imagensMentores[x] = aux.data.image;
+      }
+      
+      let i = 0;
       const results = [];
       await mentoringCollection.get().then((snapshot) => {
         snapshot.forEach((doc) => {
-          results.push(doc.data());
+          results.push({
+          data: doc.data(),
+          nameMentor: nomesMentores[i],
+          imageMentor: imagensMentores[i],
+          });
+          i++;
         });
       });
+
       if (!results.length) {
         return response
           .status(400)
           .json({ error: 'Não tem mentorias para serem listadas' });
       }
+      
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
