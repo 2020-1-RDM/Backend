@@ -4,7 +4,8 @@
   "description": "backend do sistema redementores",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/server.js"
+    "start": "nodemon src/server.js",
+    "linter": "eslint --ignore-path .gitignore ."
   },
   "repository": {
     "type": "git",
@@ -30,7 +31,7 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-prettier": "^3.1.2",
     "nodemon": "^2.0.2",
-    "prettier": "^2.0.2",
+    "prettier": "^2.0.5",
     "sucrase": "^3.12.1"
   }
 }
