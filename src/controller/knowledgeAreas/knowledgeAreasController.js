@@ -2,36 +2,82 @@ import admin from '../../configs/database/connection';
 
 require('dotenv').config();
 
-const db = admin.firestore();                                                                                           
+const db = admin.firestore();
+
+async function getAllMentoring() {
+  const mentoriaCollection = db.collection('mentoria');
+  const results = [];
+  await mentoriaCollection.get().then((snapshot) => {
+    snapshot.forEach((doc) => {
+      results.push(doc.data());
+    });
+  });
+  return results;
+}
+
+async function filterValidKnowledgeAreas(knowledgAreas) {
+  const filteredResult = [];
+  const allMentorings = await getAllMentoring();
+  for (let i = 0; i < knowledgAreas.length; i += 1) {
+    for (let j = 0; j < allMentorings.length; j += 1) {
+      if (knowledgAreas[i].name === allMentorings[j].knowledgeArea) {
+        filteredResult.push(knowledgAreas[i]);
+        break;
+      }
+    }
+  }
+  return filteredResult;
+}
+
+async function getAll() {
+  const knowledgeAreasCollection = db.collection('area_conhecimento');
+  const result = [];
+  await knowledgeAreasCollection.get().then((snapshot) => {
+    return snapshot.forEach((res) => {
+      result.push(res.data());
+    });
+  });
+  return result;
+}
 
 module.exports = {
   async get(request, response) {
     try {
-      const areasCollection = db.collection('area_conhecimento');
-      const result = [];
-      await areasCollection.get().then((snapshot) => {
-        return snapshot.forEach((res) => {
-          result.push(res.data());
-        });
-      });
+      const result = await getAll();
       if (!result) {
         return response.status(404).json({ error: 'Não foi encontrado.' });
       }
       return response.status(200).send(result);
     } catch (e) {
       return response.status(500).json({
-        error: `Erro durante o processamento do login. Espere um momento e tente novamente! Erro : ${e}`,
+        error: `Erro durante o processamento. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },
+
+  async getValid(request, response) {
+    try {
+      let result = await getAll();
+      result = await filterValidKnowledgeAreas(result);
+      if (!result) {
+        return response.status(404).json({ error: 'Não foi encontrado.' });
+      }
+      return response.status(200).send(result);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
+
   async insert(request, response) {
     try {
       const { name } = request.body;
 
-      const areaCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
 
       let idArea = null;
-      await areaCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
@@ -45,7 +91,7 @@ module.exports = {
           .send({ error: 'Área de conhecimento já existe.' });
       }
 
-      await areaCollection.add({
+      await knowledgeAreasCollection.add({
         name,
       });
       return response.status(201).send();
@@ -60,10 +106,10 @@ module.exports = {
       // eslint-disable-next-line prefer-const
       let { name, newName } = request.body;
 
-      const areaCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
 
       let idArea = null;
-      await areaCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
@@ -77,7 +123,7 @@ module.exports = {
           .send({ error: 'Área de conhecimento não existe.' });
       }
       name = newName;
-      await areaCollection.doc(idArea).set({
+      await knowledgeAreasCollection.doc(idArea).set({
         name,
       });
       return response.status(200).send();
@@ -91,10 +137,10 @@ module.exports = {
     try {
       const { name } = request.body;
 
-      const areaCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
 
       let idArea = null;
-      await areaCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
@@ -106,7 +152,7 @@ module.exports = {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
-      await areaCollection.doc(idArea).delete();
+      await knowledgeAreasCollection.doc(idArea).delete();
       return response.status(200).send();
     } catch (e) {
       return response.status(500).json({
@@ -122,12 +168,12 @@ module.exports = {
           .status(404)
           .json({ error: 'Não foi encontrado esse usuário' });
       }
-      const areasCollection = db.collection('area_conhecimento');
+      const knowledgeAreasCollection = db.collection('area_conhecimento');
       const userCollection = db.collection('user');
       let resultArea = null;
       let resultUser = null;
       const listAreas = new Set();
-      await areasCollection
+      await knowledgeAreasCollection
         .where('name', '==', name)
         .get()
         .then((snapshot) => {
