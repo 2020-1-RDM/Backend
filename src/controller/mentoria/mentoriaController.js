@@ -145,11 +145,14 @@ module.exports = {
     try {
       const mentoringCollection = db.collection('mentoria');
       const results = [];
-      await mentoringCollection.get().then((snapshot) => {
-        snapshot.forEach((doc) => {
-          results.push(doc.data());
+      await mentoringCollection
+        .where('flagDisable', '==', false)
+        .get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            results.push(doc.data());
+          });
         });
-      });
       if (!results.length) {
         return response
           .status(400)
