@@ -16,13 +16,12 @@ async function verifyArea(listAreas) {
 
   await areasCollection.get().then((snapshot) => {
     return snapshot.forEach((res) => {
-      resultArea.push(res.data());
+      resultArea.push(res.data().name.toLowerCase());
     });
   });
 
-  for (let i = 0; i < listAreas.length; i += 1) {
-    if (!resultArea.includes(listAreas[i]))
-      areasCollection.add({ name: listAreas[i] });
+  if (!resultArea.includes(listAreas.toLowerCase())) {
+    await areasCollection.add({ name: listAreas });
   }
 }
 
