@@ -85,11 +85,13 @@ module.exports = {
       const timeDate = [{}];
       const dateTimeId = [];
 
+      // controls the number of weeks to be scheduled
       const weeksController = 4;
 
       for (let i = 0; i < dayOfWeek.length; i += 1) {
         const currentDate = new Date();
 
+        // eslint-disable-next-line no-await-in-loop
         let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
 
         for (let j = 0; j < weeksController; j += 1) {
@@ -108,6 +110,7 @@ module.exports = {
             times: [{ hour: time[i], flagBusy: false }],
           };
         }
+        // eslint-disable-next-line no-await-in-loop
         dateTimeId[i] = (await dateTimeCollection.add({ timeDate })).id;
       }
 
