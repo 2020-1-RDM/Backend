@@ -86,6 +86,13 @@ routes.put(
   authMiddleware,
   mentoriaController.updateMentoring
 );
+
+routes.put(
+  '/mentoria/changeVisibility/',
+  // authMiddleware,
+  mentoriaController.changeVisibility
+);
+
 routes.delete(
   '/mentoria/deactivate/:id',
   authMiddleware,

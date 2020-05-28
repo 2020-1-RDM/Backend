@@ -81,7 +81,7 @@ module.exports = {
 
           const mentoringDay = `${currentDate.getDate(currentDate)}/${
             currentDate.getMonth(currentDate) + 1
-          }/${currentDate.getFullYear(currentDate)}`;
+            }/${currentDate.getFullYear(currentDate)}`;
 
           timeDate[j] = {
             day: dayOfWeek[i],
@@ -239,8 +239,9 @@ module.exports = {
           .send({ error: 'A mentoria não foi encontrada' });
       }
 
-      const flag = {};
-      flag.flagDisable = true;
+      const flag = {
+        flagDisable : true
+      };
 
       await mentoringCollection.doc(id).update(flag);
 
@@ -253,4 +254,30 @@ module.exports = {
       });
     }
   },
+
+  async changeVisibility(request, response) {
+    try {
+      const mentoringCollection = db.collection('mentorias');
+      const { id } = request.query;
+      const mentoring = (await mentoringCollection.doc(id).get()).data();
+      console.log(mentoring.hasOwnProperty('isVisible'))
+      if(mentoring.hasOwnProperty('isVisible'))
+        mentoring.isVisible = (mentoring.isVisible) ? false:true;
+      else
+        mentoring.isVisible = false;
+
+      await mentoringCollection.doc(id).update({isVisible : mentoring.isVisible})
+      let finalMessage = 'Mentoria esta invisível';
+      if(mentoring.isVisible)
+      finalMessage = 'Mentoria esta visível';
+      return response
+        .status(200)
+        .send({ success: true, msg: finalMessage });
+
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao trocar visibilidade de mentoria : ${e}`,
+      });
+    }
+  }
 };
