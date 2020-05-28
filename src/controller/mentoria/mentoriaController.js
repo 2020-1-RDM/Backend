@@ -39,6 +39,27 @@ async function getMentoringById(id, menthorID) {
   return mentoring;
 }
 
+async function getUser(cpf) {
+  const userCollection = db.collection('user');
+  let user = null;
+  await userCollection
+    .where('cpf', '==', cpf)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        user = {
+          id: res.id,
+          data: res.data(),
+        };
+      });
+    });
+
+  if (!user) {
+    return null;
+  }
+  return user;
+}
+
 module.exports = {
   async insert(request, response) {
     try {
@@ -47,7 +68,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dayOfWeek = [],
+        dayOfWeek= [],
         time = [],
       } = request.body;
 
@@ -59,40 +80,69 @@ module.exports = {
 
       const mentoringCollection = db.collection('mentoria');
 
-      const dateTimeCollection = db.collection('dateTime');
-
-      const timeDate = [{}];
-      const dateTimeId = [];
-
       // controls the number of weeks to be scheduled
       const weeksController = 4;
+      let dates = [];
+      let k = 0;
+      let dayOfWeekSize = dayOfWeek.length;
+      
 
-      for (let i = 0; i < dayOfWeek.length; i += 1) {
-        const currentDate = new Date();
+      if(
+      (dayOfWeek[1] !== 'Segunda') && (dayOfWeek[1] !== 'Terça') && (dayOfWeek[1] !== 'Quarta') &&
+      (dayOfWeek[1] !== 'Quinta') && (dayOfWeek[1] !== 'Sexta') && (dayOfWeek[1] !== 'Sábado')){
 
-        // eslint-disable-next-line no-await-in-loop
-        let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
+        dayOfWeekSize = 1;
+        const dayOfWeekName = dayOfWeek;
 
-        for (let j = 0; j < weeksController; j += 1) {
-          if (j !== 0) {
-            sumForFirstDay = 7;
+        for (let i = 0; i < dayOfWeekSize; i += 1) {
+          const currentDate = new Date();
+  
+          let sumForFirstDay = await getFirstDate(dayOfWeekName, currentDate);
+  
+          for (let j = 0; j < weeksController; j += 1) {
+            if (j !== 0) {
+              sumForFirstDay = 7;
+            }
+            currentDate.setDate(currentDate.getDate() + sumForFirstDay);
+  
+            const mentoringDay = `${currentDate.getDate(currentDate)}/${
+              currentDate.getMonth(currentDate) + 1
+            }/${currentDate.getFullYear(currentDate)}`;
+  
+            dates[k] = {
+              day: dayOfWeekName,
+              dayOfTheMonth: mentoringDay,
+              times: [{ hour: time[i], flagBusy: false }],
+            };
+            k++;
           }
-          currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-
-          const mentoringDay = `${currentDate.getDate(currentDate)}/${
-            currentDate.getMonth(currentDate) + 1
-          }/${currentDate.getFullYear(currentDate)}`;
-
-          timeDate[j] = {
-            day: dayOfWeek[i],
-            dayOfTheMonth: mentoringDay,
-            times: [{ hour: time[i], flagBusy: false }],
-          };
         }
-        // eslint-disable-next-line no-await-in-loop
-        dateTimeId[i] = (await dateTimeCollection.add({ timeDate })).id;
+      }else{
+        for (let i = 0; i < dayOfWeekSize; i += 1) {
+          const currentDate = new Date();
+  
+          let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
+  
+          for (let j = 0; j < weeksController; j += 1) {
+            if (j !== 0) {
+              sumForFirstDay = 7;
+            }
+            currentDate.setDate(currentDate.getDate() + sumForFirstDay);
+  
+            const mentoringDay = `${currentDate.getDate(currentDate)}/${
+              currentDate.getMonth(currentDate) + 1
+            }/${currentDate.getFullYear(currentDate)}`;
+  
+            dates[k] = {
+              day: dayOfWeek[i],
+              dayOfTheMonth: mentoringDay,
+              times: [{ hour: time[i], flagBusy: false }],
+            };
+            k++;
+          }
+        }
       }
-
+    
       await mentoringCollection.add({
         image,
         cpf: cpfSession,
@@ -101,7 +151,7 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         flagDisable: signalFlag,
-        dateTime: dateTimeId,
+        dateTime: dates,
       });
 
       return response.status(200).send({ success: true });
@@ -144,20 +194,46 @@ module.exports = {
   async getAll(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
-      const results = [];
-      await mentoringCollection
-        .where('flagDisable', '==', false)
-        .get()
-        .then((snapshot) => {
-          snapshot.forEach((doc) => {
-            results.push(doc.data());
-          });
+
+      const cpfMentores= []
+      await mentoringCollection.get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          cpfMentores.push(doc.data().cpf);
         });
+      });
+
+      const nomesMentores = [];
+      let aux;
+      for (let x = 0; x < cpfMentores.length; x++){
+        aux = await getUser(cpfMentores[x]);
+        nomesMentores[x] = aux.data.name;
+      }
+
+      const imagensMentores = [];
+      for (let x = 0; x < cpfMentores.length; x++){
+        aux = await getUser(cpfMentores[x]);
+        imagensMentores[x] = aux.data.image;
+      }
+      
+      let i = 0;
+      const results = [];
+      await mentoringCollection.get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          results.push({
+          data: doc.data(),
+          nameMentor: nomesMentores[i],
+          imageMentor: imagensMentores[i],
+          });
+          i++;
+        });
+      });
+
       if (!results.length) {
         return response
           .status(400)
           .json({ error: 'Não tem mentorias para serem listadas' });
       }
+      
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
