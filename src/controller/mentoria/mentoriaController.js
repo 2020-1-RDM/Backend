@@ -48,26 +48,17 @@ async function getMentoriaByMentoringId(id) {
       .get()
       .then((snapshot) => {
         snapshot.forEach((doc) => {
-
-          if(doc.id == id){
-            
-
-            results= doc.data();
+          if (doc.id === id) {
+            results = doc.data();
           }
-          
         });
       });
 
-
-      return results;
-
-
+    return results;
   } catch (e) {
-
     return null;
   }
 }
-
 
 module.exports = {
   async insert(request, response) {
@@ -77,7 +68,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dayOfWeek= [],
+        dayOfWeek = [],
         time = [],
       } = request.body;
 
@@ -91,15 +82,15 @@ module.exports = {
 
       // controls the number of weeks to be scheduled
       const weeksController = 4;
-      let dates = [];
+      const dates = [];
       let k = 0;
       let days = [];
       let hours = [];
 
-      if(!Array.isArray(dayOfWeek)){
+      if (!Array.isArray(dayOfWeek)) {
         days.push(dayOfWeek);
         hours.push(time);
-      }else {
+      } else {
         days = dayOfWeek;
         hours = time;
       }
@@ -107,6 +98,7 @@ module.exports = {
       for (let i = 0; i < days.length; i += 1) {
         const currentDate = new Date();
 
+        // eslint-disable-next-line no-await-in-loop
         let sumForFirstDay = await getFirstDate(days[i], currentDate);
 
         for (let j = 0; j < weeksController; j += 1) {
@@ -122,12 +114,20 @@ module.exports = {
           dates[k] = {
             day: days[i],
             dayOfTheMonth: mentoringDay,
-            times: [{ hour: hours, flagBusy: false, typeMentoring: null, descProject: null, mentoradoId: null }],
+            times: [
+              {
+                hour: hours,
+                flagBusy: false,
+                typeMentoring: null,
+                descProject: null,
+                mentoradoId: null,
+              },
+            ],
           };
-          k++;
+          k += 1;
         }
       }
-      
+
       await mentoringCollection.add({
         image,
         cpf: cpfSession,
@@ -138,7 +138,6 @@ module.exports = {
         flagDisable: signalFlag,
         dateTime: dates,
       });
-
 
       return response.status(200).send({ success: true });
     } catch (e) {
@@ -292,13 +291,7 @@ module.exports = {
 
   async choiceMentoring(request, response) {
     try {
-      const {
-        typeMentoring,
-        descProject,
-        date,
-        hour,
-      } = request.body;
-
+      const { typeMentoring, descProject, date, hour } = request.body;
 
       let isAvailable = false;
       const mentoradoId = request.tokenCpf;
@@ -306,11 +299,12 @@ module.exports = {
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoriaByMentoringId(id);
 
-      for (let x = 0; x < mentoring.dateTime.length; x++){
-        if(mentoring.dateTime[x].dayOfTheMonth == date && mentoring.dateTime[x].times[0].hour == hour){
-
-          
-          if(mentoring.dateTime[x].times[0].flagBusy == false){
+      for (let x = 0; x < mentoring.dateTime.length; x += 1) {
+        if (
+          mentoring.dateTime[x].dayOfTheMonth === date &&
+          mentoring.dateTime[x].times[0].hour === hour
+        ) {
+          if (mentoring.dateTime[x].times[0].flagBusy === false) {
             mentoring.dateTime[x].times[0].typeMentoring = typeMentoring;
             mentoring.dateTime[x].times[0].descProject = descProject;
             mentoring.dateTime[x].times[0].flagBusy = true;
@@ -320,24 +314,19 @@ module.exports = {
           }
         }
       }
-      
 
       await mentoringCollection.doc(id).update(mentoring);
 
-      if (isAvailable){
+      if (isAvailable) {
         return response.status(200).send({
           success: true,
           msg: 'Inscrição efetuada',
-
-        });
-      }else{
-        return response.status(400).send({
-          success: false,
-          msg: 'Mentoria indisponível',
-
         });
       }
-
+      return response.status(400).send({
+        success: false,
+        msg: 'Mentoria indisponível',
+      });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao realizar inscrição : ${e}`,
