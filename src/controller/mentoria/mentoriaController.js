@@ -118,7 +118,7 @@ module.exports = {
             dayOfTheMonth: mentoringDay,
             times: [{ hour: hours, flagBusy: false, typeMentoring: null, descProject: null, mentoradoId: null }],
           };
-          k++;
+          k+=1;
         }
       }
       
