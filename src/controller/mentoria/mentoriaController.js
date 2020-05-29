@@ -28,7 +28,7 @@ async function getMentoringByMenthor(menthorID) {
   }
 }
 
-async function getMentoringById(id, menthorID) {
+async function getMentoringById(id) {
   const result = db.collection('mentoria').doc(id).get();
   return result ? result.data : null;
 }
@@ -174,10 +174,9 @@ module.exports = {
       if (request.file) {
         image = await resizeImage(request.file);
       }
-      const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthorID);
+      const mentoring = await getMentoringById(id);
       if (!mentoring) {
         return response
           .status(404)
@@ -206,7 +205,6 @@ module.exports = {
       update.time = time && time !== mentoring.time ? time : mentoring.time;
       update.image =
         image && image !== mentoring.image ? image : mentoring.image;
-
       await mentoringCollection.doc(id).update(update);
 
       return response.status(200).send({
@@ -226,7 +224,7 @@ module.exports = {
       const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthorID);
+      const mentoring = await getMentoringById(id);
       if (!mentoring) {
         return response
           .status(404)
@@ -251,8 +249,9 @@ module.exports = {
 
   async changeVisibility(request, response) {
     try {
-      const mentoringCollection = db.collection('mentorias');
+      const mentoringCollection = db.collection('mentoria');
       const { id } = request.query;
+      console.log(id)
       const mentoring = (await mentoringCollection.doc(id).get()).data();
       if (!mentoring)
         return response.status(404).json({
@@ -277,4 +276,5 @@ module.exports = {
       });
     }
   }
+
 };
