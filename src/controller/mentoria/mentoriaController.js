@@ -61,6 +61,27 @@ async function getMentoriaByMentoringId(id) {
   }
 }
 
+async function getMentores() {
+  const userCollection = db.collection('user');
+
+  let results = [];
+  await userCollection
+    .where('userType', '==', 1)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        
+        results.push({
+          cpf: res.data().cpf,
+          name: res.data().name,
+          image: res.data().image,
+        });
+      });
+    });
+
+  return results;
+}
+
 
 
 module.exports = {
@@ -174,20 +195,35 @@ module.exports = {
   async getAll(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
+      
+      let i = 0;
+      const mentorInfos = await getMentores();
+
       const results = [];
-      await mentoringCollection
-        .where('flagDisable', '==', false)
-        .get()
-        .then((snapshot) => {
-          snapshot.forEach((doc) => {
-            results.push(doc.data());
+      await mentoringCollection.get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          for(i = 0; i < mentorInfos.length; i++){
+            if(mentorInfos.cpf == doc.data.cpf){
+              break;
+            }
+          }
+          results.push({
+          data: doc.data(),
+          mentorInfos: {
+            image: mentorInfos[i].image,
+            name: mentorInfos[i].name,
+          }
           });
         });
+      });
+
+
       if (!results.length) {
         return response
           .status(400)
           .json({ error: 'Não tem mentorias para serem listadas' });
       }
+      
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
