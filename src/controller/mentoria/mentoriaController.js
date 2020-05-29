@@ -40,6 +40,29 @@ async function getMentoringById(id, menthorID) {
 }
 
 
+async function getMentoriaByMentoringId(id) {
+  try {
+    const mentoringCollection = db.collection('mentoria');
+    let results;
+    await mentoringCollection
+      .where('flagDisable', '==', false)
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+          if (doc.id === id) {
+            results = doc.data();
+          }
+        });
+      });
+
+    return results;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+
 module.exports = {
   async insert(request, response) {
     try {
@@ -93,7 +116,7 @@ module.exports = {
           dates[k] = {
             day: days[i],
             dayOfTheMonth: mentoringDay,
-            times: [{ hour: hours, flagBusy: false }],
+            times: [{ hour: hours, flagBusy: false, typeMentoring: null, descProject: null, mentoradoId: null }],
           };
           k++;
         }
@@ -257,6 +280,51 @@ module.exports = {
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao desativar mentoria : ${e}`,
+      });
+    }
+  },
+
+  async choiceMentoring(request, response) {
+    try {
+      const { typeMentoring, descProject, date, hour } = request.body;
+
+      let isAvailable = false;
+      const mentoradoId = request.tokenCpf;
+      const { id } = request.params;
+      const mentoringCollection = db.collection('mentoria');
+      const mentoring = await getMentoriaByMentoringId(id);
+
+      for (let x = 0; x < mentoring.dateTime.length; x += 1) {
+        if (
+          mentoring.dateTime[x].dayOfTheMonth === date &&
+          mentoring.dateTime[x].times[0].hour === hour
+        ) {
+          if (mentoring.dateTime[x].times[0].flagBusy === false) {
+            mentoring.dateTime[x].times[0].typeMentoring = typeMentoring;
+            mentoring.dateTime[x].times[0].descProject = descProject;
+            mentoring.dateTime[x].times[0].flagBusy = true;
+            mentoring.dateTime[x].times[0].mentoradoId = mentoradoId;
+            isAvailable = true;
+            break;
+          }
+        }
+      }
+
+      await mentoringCollection.doc(id).update(mentoring);
+
+      if (isAvailable) {
+        return response.status(200).send({
+          success: true,
+          msg: 'Inscrição efetuada',
+        });
+      }
+      return response.status(400).send({
+        success: false,
+        msg: 'Mentoria indisponível',
+      });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao realizar inscrição : ${e}`,
       });
     }
   },

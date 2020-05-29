@@ -91,5 +91,10 @@ routes.delete(
   authMiddleware,
   mentoriaController.deactivateMentoring
 );
+routes.post(
+  '/mentoria/choice/:id',
+  authMiddleware,
+  mentoriaController.choiceMentoring
+);
 
 export default routes;
