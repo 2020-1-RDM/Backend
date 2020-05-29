@@ -93,7 +93,7 @@ module.exports = {
           dates[k] = {
             day: days[i],
             dayOfTheMonth: mentoringDay,
-            times: [{ hour: hours, flagBusy: false }],
+            times: [{ hour: hours[i], flagBusy: false }],
           };
           k++;
         }
