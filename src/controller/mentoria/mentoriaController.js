@@ -202,7 +202,7 @@ module.exports = {
       const results = [];
       await mentoringCollection.get().then((snapshot) => {
         snapshot.forEach((doc) => {
-          for(i = 0; i < mentorInfos.length; i++){
+          for(i = 0; i < mentorInfos.length; i+=1){
             if(mentorInfos.cpf == doc.data.cpf){
               break;
             }
