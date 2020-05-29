@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import serviceAccount from './dbconfig2.json';
+import serviceAccount from './dbconfig.json';
 
 require('dotenv').config();
 
