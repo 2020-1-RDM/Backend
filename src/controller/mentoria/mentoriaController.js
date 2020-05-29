@@ -29,14 +29,8 @@ async function getMentoringByMenthor(menthorID) {
 }
 
 async function getMentoringById(id, menthorID) {
-  const mentorings = await getMentoringByMenthor(menthorID);
-  if (!mentorings) {
-    return null;
-  }
-  const mentoring = mentorings.filter((m) => {
-    return m.id === id;
-  })[0].data;
-  return mentoring;
+  const result = db.collection('mentoria').doc(id).get();
+  return result ? result.data:null;
 }
 
 module.exports = {
@@ -259,7 +253,7 @@ module.exports = {
     try {
       const mentoringCollection = db.collection('mentorias');
       const { id } = request.query;
-      const mentoring = (await mentoringCollection.doc(id).get()).data();
+      const mentoring = getMentoringById(id);//(await mentoringCollection.doc(id).get()).data();
       console.log(mentoring.hasOwnProperty('isVisible'))
       if(mentoring.hasOwnProperty('isVisible'))
         mentoring.isVisible = (mentoring.isVisible) ? false:true;
