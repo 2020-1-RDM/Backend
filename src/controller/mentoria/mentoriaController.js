@@ -57,7 +57,11 @@ async function getUser(cpf) {
   if (!user) {
     return null;
   }
-  return user;
+  //console.log(user.data.name);
+  return {
+    name: user.data.name,
+    image: user.data.image
+  };
 }
 
 module.exports = {
@@ -166,14 +170,16 @@ module.exports = {
     try {
       const mentoringCollection = db.collection('mentoria');
 
-      const cpfMentores= []
+
+      
+      /*const cpfMentores= []
       await mentoringCollection.get().then((snapshot) => {
         snapshot.forEach((doc) => {
           cpfMentores.push(doc.data().cpf);
         });
-      });
+      });*/
 
-      const nomesMentores = [];
+      /*const nomesMentores = [];
       let aux;
       for (let x = 0; x < cpfMentores.length; x++){
         aux = await getUser(cpfMentores[x]);
@@ -184,7 +190,33 @@ module.exports = {
       for (let x = 0; x < cpfMentores.length; x++){
         aux = await getUser(cpfMentores[x]);
         imagensMentores[x] = aux.data.image;
-      }
+      }*/
+
+      //let auxx = getUser('1234567');
+
+      
+      /*aynsc function foo(){
+      let currentCpf;
+      let cont = 0;
+      const dadosMentores= [{}]
+      await mentoringCollection.get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          currentCpf = doc.data().cpf;
+          //console.log(getUser(currentCpf));
+          async function foo() {
+            return await getUser (currentCpf);
+          }
+          //const auxx = await foo();
+          //console.log (auxx);
+          //dadosMentores.push(await getUser(currentCpf));
+          //console.log(await getUser(currentCpf));
+          //let auxx = await getUser(currentCpf);
+        });
+      });
+    }*/
+
+      //let auxx = await getUser (currentCpf);
+      //console.log(auxx);
       
       let i = 0;
       const results = [];
@@ -192,8 +224,9 @@ module.exports = {
         snapshot.forEach((doc) => {
           results.push({
           data: doc.data(),
-          nameMentor: nomesMentores[i],
-          imageMentor: imagensMentores[i],
+          //nameMentor: nomesMentores[i],
+          //imageMentor: imagensMentores[i],
+          mentorInfos: dadosMentores,
           });
           i++;
         });
