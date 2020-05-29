@@ -253,8 +253,7 @@ module.exports = {
     try {
       const mentoringCollection = db.collection('mentorias');
       const { id } = request.query;
-      const mentoring = getMentoringById(id);//(await mentoringCollection.doc(id).get()).data();
-      console.log(mentoring.hasOwnProperty('isVisible'))
+      const mentoring = (await mentoringCollection.doc(id).get()).data();
       if(mentoring.hasOwnProperty('isVisible'))
         mentoring.isVisible = (mentoring.isVisible) ? false:true;
       else
