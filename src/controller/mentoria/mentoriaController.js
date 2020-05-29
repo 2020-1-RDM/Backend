@@ -305,7 +305,6 @@ module.exports = {
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoriaByMentoringId(id);
-      let update = {};
 
       for (let x = 0; x < mentoring.dateTime.length; x++){
         if(mentoring.dateTime[x].dayOfTheMonth == date && mentoring.dateTime[x].times[0].hour == hour){
@@ -317,9 +316,7 @@ module.exports = {
             mentoring.dateTime[x].times[0].flagBusy = true;
             mentoring.dateTime[x].times[0].mentoradoId = mentoradoId;
             isAvailable = true;
-            x = 1000;
-          }else {
-            isAvailable = false;
+            break;
           }
         }
       }
@@ -327,17 +324,17 @@ module.exports = {
 
       await mentoringCollection.doc(id).update(mentoring);
 
-      if (isAvailable == true){
+      if (isAvailable){
         return response.status(200).send({
           success: true,
           msg: 'Inscrição efetuada',
-          data: update,
+
         });
       }else{
-        return response.status(200).send({
+        return response.status(400).send({
           success: false,
           msg: 'Mentoria indisponível',
-          data: update,
+
         });
       }
 
