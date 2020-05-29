@@ -84,65 +84,38 @@ module.exports = {
       const weeksController = 4;
       let dates = [];
       let k = 0;
-      let dayOfWeekSize = dayOfWeek.length;
-      
+      let days = [];
 
-      if(
-      (dayOfWeek[1] !== 'Segunda') && (dayOfWeek[1] !== 'Terça') && (dayOfWeek[1] !== 'Quarta') &&
-      (dayOfWeek[1] !== 'Quinta') && (dayOfWeek[1] !== 'Sexta') && (dayOfWeek[1] !== 'Sábado')){
+      if(!Array.isArray(dayOfWeek)){
+        days.push(dayOfWeek);
+      }else {
+        days = dayOfWeek;
+      }
 
-        dayOfWeekSize = 1;
-        const dayOfWeekName = dayOfWeek;
+      for (let i = 0; i < days.length; i += 1) {
+        const currentDate = new Date();
 
-        for (let i = 0; i < dayOfWeekSize; i += 1) {
-          const currentDate = new Date();
-  
-          let sumForFirstDay = await getFirstDate(dayOfWeekName, currentDate);
-  
-          for (let j = 0; j < weeksController; j += 1) {
-            if (j !== 0) {
-              sumForFirstDay = 7;
-            }
-            currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-  
-            const mentoringDay = `${currentDate.getDate(currentDate)}/${
-              currentDate.getMonth(currentDate) + 1
-            }/${currentDate.getFullYear(currentDate)}`;
-  
-            dates[k] = {
-              day: dayOfWeekName,
-              dayOfTheMonth: mentoringDay,
-              times: [{ hour: time[i], flagBusy: false }],
-            };
-            k++;
+        let sumForFirstDay = await getFirstDate(days[i], currentDate);
+
+        for (let j = 0; j < weeksController; j += 1) {
+          if (j !== 0) {
+            sumForFirstDay = 7;
           }
-        }
-      }else{
-        for (let i = 0; i < dayOfWeekSize; i += 1) {
-          const currentDate = new Date();
-  
-          let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
-  
-          for (let j = 0; j < weeksController; j += 1) {
-            if (j !== 0) {
-              sumForFirstDay = 7;
-            }
-            currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-  
-            const mentoringDay = `${currentDate.getDate(currentDate)}/${
-              currentDate.getMonth(currentDate) + 1
-            }/${currentDate.getFullYear(currentDate)}`;
-  
-            dates[k] = {
-              day: dayOfWeek[i],
-              dayOfTheMonth: mentoringDay,
-              times: [{ hour: time[i], flagBusy: false }],
-            };
-            k++;
-          }
+          currentDate.setDate(currentDate.getDate() + sumForFirstDay);
+
+          const mentoringDay = `${currentDate.getDate(currentDate)}/${
+            currentDate.getMonth(currentDate) + 1
+          }/${currentDate.getFullYear(currentDate)}`;
+
+          dates[k] = {
+            day: days[i],
+            dayOfTheMonth: mentoringDay,
+            times: [{ hour: time[i], flagBusy: false }],
+          };
+          k++;
         }
       }
-    
+      
       await mentoringCollection.add({
         image,
         cpf: cpfSession,
@@ -153,6 +126,7 @@ module.exports = {
         flagDisable: signalFlag,
         dateTime: dates,
       });
+
 
       return response.status(200).send({ success: true });
     } catch (e) {
