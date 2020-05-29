@@ -39,26 +39,6 @@ async function getMentoringById(id, menthorID) {
   return mentoring;
 }
 
-async function getUser(cpf) {
-  const userCollection = db.collection('user');
-  let user = null;
-  await userCollection
-    .where('cpf', '==', cpf)
-    .get()
-    .then((snapshot) => {
-      return snapshot.forEach((res) => {
-        user = {
-          id: res.id,
-          data: res.data(),
-        };
-      });
-    });
-
-  if (!user) {
-    return null;
-  }
-  return user;
-}
 
 module.exports = {
   async insert(request, response) {
