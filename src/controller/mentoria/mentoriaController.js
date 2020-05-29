@@ -141,6 +141,7 @@ module.exports = {
       const results = [];
       await mentoringCollection
         .where('flagDisable', '==', false)
+        .where('isVisible', "==", true)
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
