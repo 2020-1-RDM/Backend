@@ -30,7 +30,7 @@ async function getMentoringByMenthor(menthorID) {
 
 async function getMentoringById(id, menthorID) {
   const result = db.collection('mentoria').doc(id).get();
-  return result ? result.data:null;
+  return result ? result.data : null;
 }
 
 module.exports = {
@@ -234,7 +234,7 @@ module.exports = {
       }
 
       const flag = {
-        flagDisable : true
+        flagDisable: true
       };
 
       await mentoringCollection.doc(id).update(flag);
@@ -254,15 +254,19 @@ module.exports = {
       const mentoringCollection = db.collection('mentorias');
       const { id } = request.query;
       const mentoring = (await mentoringCollection.doc(id).get()).data();
-      if(mentoring.hasOwnProperty('isVisible'))
-        mentoring.isVisible = (mentoring.isVisible) ? false:true;
+      if (!mentoring)
+        return response.status(404).json({
+          error: `Mentoria não encontrada : ${e}`,
+        });
+      if (mentoring.hasOwnProperty('isVisible'))
+        mentoring.isVisible = (mentoring.isVisible) ? false : true;
       else
         mentoring.isVisible = false;
 
-      await mentoringCollection.doc(id).update({isVisible : mentoring.isVisible})
+      await mentoringCollection.doc(id).update({ isVisible: mentoring.isVisible })
       let finalMessage = 'Mentoria esta invisível';
-      if(mentoring.isVisible)
-      finalMessage = 'Mentoria esta visível';
+      if (mentoring.isVisible)
+        finalMessage = 'Mentoria esta visível';
       return response
         .status(200)
         .send({ success: true, msg: finalMessage });

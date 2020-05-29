@@ -89,7 +89,7 @@ routes.put(
 
 routes.put(
   '/mentoria/changeVisibility/',
-  // authMiddleware,
+  authMiddleware,
   mentoriaController.changeVisibility
 );
 
