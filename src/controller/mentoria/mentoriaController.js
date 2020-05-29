@@ -39,6 +39,36 @@ async function getMentoringById(id, menthorID) {
   return mentoring;
 }
 
+async function getMentoriaByMentoringId(id) {
+  try {
+    const mentoringCollection = db.collection('mentoria');
+    let results;
+    await mentoringCollection
+      .where('flagDisable', '==', false)
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+
+          if(doc.id == id){
+            
+
+            results= doc.data();
+          }
+          
+        });
+      });
+
+
+      return results;
+
+
+  } catch (e) {
+
+    return null;
+  }
+}
+
+
 module.exports = {
   async insert(request, response) {
     try {
@@ -47,7 +77,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dayOfWeek = [],
+        dayOfWeek= [],
         time = [],
       } = request.body;
 
@@ -59,19 +89,25 @@ module.exports = {
 
       const mentoringCollection = db.collection('mentoria');
 
-      const dateTimeCollection = db.collection('dateTime');
-
-      const timeDate = [{}];
-      const dateTimeId = [];
-
       // controls the number of weeks to be scheduled
       const weeksController = 4;
+      let dates = [];
+      let k = 0;
+      let days = [];
+      let hours = [];
 
-      for (let i = 0; i < dayOfWeek.length; i += 1) {
+      if(!Array.isArray(dayOfWeek)){
+        days.push(dayOfWeek);
+        hours.push(time);
+      }else {
+        days = dayOfWeek;
+        hours = time;
+      }
+
+      for (let i = 0; i < days.length; i += 1) {
         const currentDate = new Date();
 
-        // eslint-disable-next-line no-await-in-loop
-        let sumForFirstDay = await getFirstDate(dayOfWeek[i], currentDate);
+        let sumForFirstDay = await getFirstDate(days[i], currentDate);
 
         for (let j = 0; j < weeksController; j += 1) {
           if (j !== 0) {
@@ -83,16 +119,15 @@ module.exports = {
             currentDate.getMonth(currentDate) + 1
           }/${currentDate.getFullYear(currentDate)}`;
 
-          timeDate[j] = {
-            day: dayOfWeek[i],
+          dates[k] = {
+            day: days[i],
             dayOfTheMonth: mentoringDay,
-            times: [{ hour: time[i], flagBusy: false }],
+            times: [{ hour: hours, flagBusy: false, typeMentoring: null, descProject: null, mentoradoId: null }],
           };
+          k++;
         }
-        // eslint-disable-next-line no-await-in-loop
-        dateTimeId[i] = (await dateTimeCollection.add({ timeDate })).id;
       }
-
+      
       await mentoringCollection.add({
         image,
         cpf: cpfSession,
@@ -101,8 +136,9 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         flagDisable: signalFlag,
-        dateTime: dateTimeId,
+        dateTime: dates,
       });
+
 
       return response.status(200).send({ success: true });
     } catch (e) {
@@ -250,6 +286,64 @@ module.exports = {
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao desativar mentoria : ${e}`,
+      });
+    }
+  },
+
+  async choiceMentoring(request, response) {
+    try {
+      const {
+        typeMentoring,
+        descProject,
+        date,
+        hour,
+      } = request.body;
+
+
+      let isAvailable = false;
+      const mentoradoId = request.tokenCpf;
+      const { id } = request.params;
+      const mentoringCollection = db.collection('mentoria');
+      const mentoring = await getMentoriaByMentoringId(id);
+      let update = {};
+
+      for (let x = 0; x < mentoring.dateTime.length; x++){
+        if(mentoring.dateTime[x].dayOfTheMonth == date && mentoring.dateTime[x].times[0].hour == hour){
+
+          
+          if(mentoring.dateTime[x].times[0].flagBusy == false){
+            mentoring.dateTime[x].times[0].typeMentoring = typeMentoring;
+            mentoring.dateTime[x].times[0].descProject = descProject;
+            mentoring.dateTime[x].times[0].flagBusy = true;
+            mentoring.dateTime[x].times[0].mentoradoId = mentoradoId;
+            isAvailable = true;
+            x = 1000;
+          }else {
+            isAvailable = false;
+          }
+        }
+      }
+      
+
+      await mentoringCollection.doc(id).update(mentoring);
+
+      if (isAvailable == true){
+        return response.status(200).send({
+          success: true,
+          msg: 'Inscrição efetuada',
+          data: update,
+        });
+      }else{
+        return response.status(200).send({
+          success: false,
+          msg: 'Mentoria indisponível',
+          data: update,
+        });
+      }
+
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao realizar inscrição : ${e}`,
       });
     }
   },
