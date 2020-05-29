@@ -65,11 +65,14 @@ module.exports = {
       let dates = [];
       let k = 0;
       let days = [];
+      let hours = [];
 
       if(!Array.isArray(dayOfWeek)){
         days.push(dayOfWeek);
+        hours.push(time);
       }else {
         days = dayOfWeek;
+        hours = time;
       }
 
       for (let i = 0; i < days.length; i += 1) {
@@ -90,7 +93,7 @@ module.exports = {
           dates[k] = {
             day: days[i],
             dayOfTheMonth: mentoringDay,
-            times: [{ hour: time[i], flagBusy: false }],
+            times: [{ hour: hours, flagBusy: false }],
           };
           k++;
         }
