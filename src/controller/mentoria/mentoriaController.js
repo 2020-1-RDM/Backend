@@ -39,7 +39,6 @@ async function getMentoringById(id, menthorID) {
   return mentoring;
 }
 
-
 module.exports = {
   async insert(request, response) {
     try {
@@ -48,7 +47,7 @@ module.exports = {
         description,
         knowledgeArea,
         mentoringOption,
-        dayOfWeek= [],
+        dayOfWeek = [],
         time = [],
       } = request.body;
 
@@ -62,15 +61,15 @@ module.exports = {
 
       // controls the number of weeks to be scheduled
       const weeksController = 4;
-      let dates = [];
+      const dates = [];
       let k = 0;
       let days = [];
       let hours = [];
 
-      if(!Array.isArray(dayOfWeek)){
+      if (!Array.isArray(dayOfWeek)) {
         days.push(dayOfWeek);
         hours.push(time);
-      }else {
+      } else {
         days = dayOfWeek;
         hours = time;
       }
@@ -78,6 +77,7 @@ module.exports = {
       for (let i = 0; i < days.length; i += 1) {
         const currentDate = new Date();
 
+        // eslint-disable-next-line no-await-in-loop
         let sumForFirstDay = await getFirstDate(days[i], currentDate);
 
         for (let j = 0; j < weeksController; j += 1) {
@@ -95,10 +95,11 @@ module.exports = {
             dayOfTheMonth: mentoringDay,
             times: [{ hour: hours[i], flagBusy: false }],
           };
+          // eslint-disable-next-line no-plusplus
           k++;
         }
       }
-      
+
       await mentoringCollection.add({
         image,
         cpf: cpfSession,
@@ -109,7 +110,6 @@ module.exports = {
         flagDisable: signalFlag,
         dateTime: dates,
       });
-
 
       return response.status(200).send({ success: true });
     } catch (e) {
