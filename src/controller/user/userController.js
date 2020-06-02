@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 
@@ -19,10 +20,11 @@ async function verifyArea(listAreas) {
       resultArea.push(res.data().name.toLowerCase());
     });
   });
-
-  if (!resultArea.includes(listAreas.toLowerCase())) {
-    await areasCollection.add({ name: listAreas });
-  }
+  listAreas.forEach(async (el) => {
+    if (!resultArea.includes(el.toLowerCase())) {
+      await areasCollection.add({ name: el });
+    }
+  });
 }
 
 async function getUser(email) {
@@ -261,106 +263,38 @@ module.exports = {
 
   async update(request, response) {
     try {
-      const {
-        cpf,
-        flag,
-        email,
-        password,
-        name,
-        linkedin,
-        phone,
-        areas,
-      } = request.body;
-      let image;
+      const allDatas = request.body;
+      const { token } = request.headers;
+
+      Object.keys(allDatas).forEach((el) => {
+        if (allDatas[el] === null || allDatas[el] === undefined)
+          delete allDatas[el];
+      });
+
       if (request.file) {
-        image = await resizeImage(request.file);
+        const image = await resizeImage(request.file);
+        allDatas.image = image !== allDatas.image ? image : allDatas.image;
       }
+      if (allDatas.password)
+        allDatas.password = await bcrypt.hash(allDatas.password, 8);
 
       const userCollection = db.collection('user');
 
-      const passwordHash = await bcrypt.hash(password, 8);
+      const idToken = jwt.decode(token).id;
+      const user = userCollection.doc(idToken);
 
-      const user = await getUser(email);
-      const resultArea = [];
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
+      await verifyArea(allDatas.areas);
 
-      await verifyArea(areas);
-
-      const newImage = image && image !== user.image ? image : user.image;
-
-      await userCollection.doc(user.id).update({
-        password: passwordHash,
-        name,
-        cpf,
-        phone,
-        linkedin,
-        email,
-        userType: flag,
-        image: newImage,
-        areas: resultArea,
-      });
+      await userCollection.doc(user.id).update(allDatas);
 
       return response
         .status(200)
         .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
       return response.status(500).json({
-        error: `Erro ao atualizar usuário : ${e}`,
-      });
-    }
-  },
-
-  async updateMentee(request, response) {
-    try {
-      const {
-        name,
-        birthDate,
-        cpf,
-        phone,
-        email,
-        registration,
-        password,
-      } = request.body;
-
-      const image = await resizeImage(request.file);
-
-      const userCollection = db.collection('user');
-
-      const user = await getUser(email);
-      if (!user) {
-        return response.status(400).send({ error: 'Usuário não existe' });
-      }
-
-      if (name) {
-        await userCollection.doc(user.id).update({ name });
-      }
-      if (birthDate) {
-        await userCollection.doc(user.id).update({ birthDate });
-      }
-      if (cpf) {
-        await userCollection.doc(user.id).update({ cpf });
-      }
-      if (phone) {
-        await userCollection.doc(user.id).update({ phone });
-      }
-      if (registration) {
-        await userCollection.doc(user.id).update({ registration });
-      }
-      if (password) {
-        const passwordHash = await bcrypt.hash(password, 8);
-        await userCollection.doc(user.id).update({ password: passwordHash });
-      }
-      if (image) {
-        await userCollection.doc(user.id).update({ image });
-      }
-
-      return response
-        .status(200)
-        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
-    } catch (e) {
-      return response.status.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
