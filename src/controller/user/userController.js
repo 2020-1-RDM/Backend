@@ -110,7 +110,7 @@ async function newMenthor(request, response) {
       return addMenthorData(newData, response);
     }
 
-    verifyArea(areas);
+    await verifyArea(areas);
 
     const currentUserType = userType.MENTHOR;
 
@@ -242,12 +242,11 @@ module.exports = {
   // eslint-disable-next-line consistent-return
   async insert(request, response) {
     try {
-      // eslint-disable-next-line radix
-      const flag = parseInt(request.body.flag);
+      const userTypeRequest = parseInt(request.body.userType, 10);
 
-      if (flag === userType.MENTHOR) {
+      if (userTypeRequest === userType.MENTHOR) {
         await newMenthor(request, response);
-      } else if (flag === userType.MENTEE) {
+      } else if (userTypeRequest === userType.MENTEE) {
         await newtMentee(request, response);
       } else {
         return response.status(400).send({
@@ -264,7 +263,7 @@ module.exports = {
   async update(request, response) {
     try {
       const allDatas = request.body;
-      const { token } = request.headers;
+      const idToken = request.tokenId;
 
       Object.keys(allDatas).forEach((el) => {
         if (allDatas[el] === null || allDatas[el] === undefined)
@@ -279,14 +278,12 @@ module.exports = {
         allDatas.password = await bcrypt.hash(allDatas.password, 8);
 
       const userCollection = db.collection('user');
-
-      const idToken = jwt.decode(token).id;
       const user = userCollection.doc(idToken);
 
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
-      await verifyArea(allDatas.areas);
+      if (allDatas.areas) await verifyArea(allDatas.areas);
 
       await userCollection.doc(user.id).update(allDatas);
 
