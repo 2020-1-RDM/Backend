@@ -137,7 +137,7 @@ module.exports = {
           dates[k] = {
             day: days[i],
             dayOfTheMonth: mentoringDay,
-            times: [{ hour: hours, flagBusy: false, typeMentoring: null, descProject: null, mentoradoId: null }],
+            times: [{ hour: hours[i], flagBusy: false, typeMentoring: null, descProject: null, mentoradoId: null }],
           };
           k+=1;
         }
