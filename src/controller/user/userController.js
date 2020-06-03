@@ -274,8 +274,6 @@ module.exports = {
         const image = await resizeImage(request.file);
         allDatas.image = image !== allDatas.image ? image : allDatas.image;
       }
-      if (allDatas.password)
-        allDatas.password = await bcrypt.hash(allDatas.password, 8);
 
       const userCollection = db.collection('user');
       const user = userCollection.doc(idToken);
