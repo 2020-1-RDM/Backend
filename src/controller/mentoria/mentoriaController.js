@@ -102,6 +102,7 @@ module.exports = {
         mentoringOption,
         flagDisable: signalFlag,
         dateTime: dateTimeId,
+        mentoringApproved: false,
       });
 
       return response.status(200).send({ success: true });
@@ -164,6 +165,33 @@ module.exports = {
         error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
+  },
+
+  async getPending(request, response){
+    try {
+      const mentoringCollection = db.collection('mentoria');
+      const results = [];
+      await mentoringCollection
+        .where('flagDisable', '==', false)
+        .where('mentoringApproved', '==', false)
+        .get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            results.push(doc.data());
+          });
+        });
+      if (!results.length) {
+        return response
+          .status(400)
+          .json({ error: 'Não tem mentorias para serem listadas' });
+      }
+      return response.status(200).json(results);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+
   },
 
   async updateMentoring(request, response) {

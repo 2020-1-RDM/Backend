@@ -80,6 +80,12 @@ routes.get(
   authMiddleware,
   mentoriaController.getMentoringBySession
 );
+routes.get(
+  '/pendingMentorings',
+  authMiddleware,
+  mentoriaController.getPending
+);
+
 routes.put(
   '/mentoria/alter/:id',
   upload.single('image'),
