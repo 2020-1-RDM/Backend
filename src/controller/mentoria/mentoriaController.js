@@ -208,11 +208,18 @@ module.exports = {
             }
           }
           results.push({
-          data: doc.data(),
-          mentorInfos: {
-            image: mentorInfos[i].image,
-            name: mentorInfos[i].name,
-          }
+            cpf: doc.data().cpf,
+            title: doc.data().title,
+            flagDisable: doc.data().flagDisable,
+            description: doc.data().description,
+            mentoringOption: doc.data().mentoringOption,
+            dateTime: doc.data().dateTime,
+            knowledgeArea: doc.data().knowledgeArea,
+            image: doc.data().image,
+            mentorInfos: {
+              image: mentorInfos[i].image,
+              name: mentorInfos[i].name,
+            }
           });
         });
       });
