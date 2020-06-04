@@ -269,11 +269,14 @@ module.exports = {
         if (allDatas[el] === null || allDatas[el] === undefined)
           delete allDatas[el];
       });
-
-      if (request.file) {
+      if (request.file !== undefined) {
         const image = await resizeImage(request.file);
         allDatas.image = image !== allDatas.image ? image : allDatas.image;
+      } else if (!allDatas.image) {
+        delete allDatas.image;
       }
+      if (allDatas.userType)
+        allDatas.userType = parseInt(allDatas.userType, 10);
 
       const userCollection = db.collection('user');
       const user = userCollection.doc(idToken);
