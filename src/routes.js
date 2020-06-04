@@ -74,7 +74,7 @@ routes.post(
   authMiddleware,
   mentoriaController.insert
 );
-routes.get('/mentoriaAll', authMiddleware, mentoriaController.getAll);
+routes.get('/mentoriaAll', authMiddleware, mentoriaController.getApproved);
 routes.get(
   '/mentoriaSession',
   authMiddleware,

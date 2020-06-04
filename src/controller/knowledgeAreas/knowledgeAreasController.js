@@ -7,7 +7,10 @@ const db = admin.firestore();
 async function getAllMentoring() {
   const mentoriaCollection = db.collection('mentoria');
   const results = [];
-  await mentoriaCollection.get().then((snapshot) => {
+  await mentoriaCollection
+  .where('mentoringApproved', '==', true)
+  .get()
+  .then((snapshot) => {
     snapshot.forEach((doc) => {
       results.push(doc.data());
     });

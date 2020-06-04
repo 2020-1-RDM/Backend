@@ -142,12 +142,13 @@ module.exports = {
     }
   },
 
-  async getAll(request, response) {
+  async getApproved(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
       const results = [];
       await mentoringCollection
         .where('flagDisable', '==', false)
+        .where('mentoringApproved', '==', true)
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
@@ -183,7 +184,7 @@ module.exports = {
       if (!results.length) {
         return response
           .status(400)
-          .json({ error: 'Não tem mentorias para serem listadas' });
+          .json({ error: 'Sem mentorias pendentes' });
       }
       return response.status(200).json(results);
     } catch (e) {
