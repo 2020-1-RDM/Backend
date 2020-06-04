@@ -91,7 +91,7 @@ routes.delete(
   authMiddleware,
   mentoriaController.deactivateMentoring
 );
-routes.post(
+routes.put(
   '/mentoria/choice/:id',
   authMiddleware,
   mentoriaController.choiceMentoring
