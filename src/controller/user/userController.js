@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import jwtAuth from '../../configs/jwt/auth';
 
 const db = admin.firestore();
 
@@ -288,9 +289,19 @@ module.exports = {
 
       await userCollection.doc(user.id).update(allDatas);
 
-      return response
-        .status(200)
-        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
+      return response.status(200).json({
+        token: jwt.sign(
+          {
+            cpf: allDatas.cpf,
+            email: allDatas.email,
+            id: user.id,
+          },
+          jwtAuth.secret,
+          {
+            expiresIn: jwtAuth.expiresIn,
+          }
+        ),
+      });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
