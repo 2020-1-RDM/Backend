@@ -92,4 +92,7 @@ routes.delete(
   mentoriaController.deactivateMentoring
 );
 
+/* ONLY FOR TEST!!! */
+
+routes.get('/email', mentoriaController.emailTest);
 export default routes;

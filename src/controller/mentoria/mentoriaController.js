@@ -1,6 +1,7 @@
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
+import transporter from '../../configs/email/email';
 
 const db = admin.firestore();
 
@@ -37,6 +38,26 @@ async function getMentoringById(id, menthorID) {
     return m.id === id;
   })[0].data;
   return mentoring;
+}
+
+async function thriggerEmail(userEmail) {
+  const emailConfiguration = {
+    from: '',
+    to: userEmail,
+    subject: '',
+    html: `<h1>Order Confirmation</h1>
+                      <p>
+                         <b>Email: </b>${userEmail}<br>
+                      </p>`,
+  };
+
+  transporter.sendMail(emailConfiguration, (err, data) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    console.log(`Sent. ${data}`);
+  });
 }
 
 module.exports = {
@@ -252,5 +273,9 @@ module.exports = {
         error: `Erro ao desativar mentoria : ${e}`,
       });
     }
+  },
+
+  async emailTest() {
+    thriggerEmail('');
   },
 };
