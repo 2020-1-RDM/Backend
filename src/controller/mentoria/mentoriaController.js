@@ -232,7 +232,6 @@ module.exports = {
           snapshot.forEach((doc) => {
             for (i = 0; i < mentorInfos.length; i += 1) {
               if (mentorInfos[i].cpf === doc.data().cpf) {
-                console.log(doc.data().cpf);
                 break;
               }
             }
