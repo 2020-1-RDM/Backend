@@ -256,6 +256,31 @@ module.exports = {
     }
   },
 
+  async mentoringEvaluation(request, response){
+    const {title, approved} = request.body;
+    const id = request.params.id;
+    let res = null;
+
+    const mentoringCollection = db.collection('mentoria');
+
+    await mentoringCollection.doc(id).update({
+      title: title,
+      mentoringApproved: approved
+    })
+
+    await mentoringCollection.doc(id).get()
+    .then(doc => {
+      if (!doc.exists) {
+        console.log('No such document!');
+      } else {
+        res = doc.data();
+      }
+    })
+
+    return response.status(200).send(res)
+
+  },
+
   async deactivateMentoring(request, response) {
     try {
       const menthorID = request.tokenCpf;

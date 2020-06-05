@@ -9,6 +9,7 @@ async function getAllMentoring() {
   const results = [];
   await mentoriaCollection
   .where('mentoringApproved', '==', true)
+  .where('flagDisable', '==', false)
   .get()
   .then((snapshot) => {
     snapshot.forEach((doc) => {
