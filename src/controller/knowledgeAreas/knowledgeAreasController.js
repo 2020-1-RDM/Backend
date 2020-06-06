@@ -8,14 +8,14 @@ async function getAllMentoring() {
   const mentoriaCollection = db.collection('mentoria');
   const results = [];
   await mentoriaCollection
-  .where('mentoringApproved', '==', true)
-  .where('flagDisable', '==', false)
-  .get()
-  .then((snapshot) => {
-    snapshot.forEach((doc) => {
-      results.push(doc.data());
+    .where('mentoringApproved', '==', true)
+    .where('flagDisable', '==', false)
+    .get()
+    .then((snapshot) => {
+      snapshot.forEach((doc) => {
+        results.push(doc.data());
+      });
     });
-  });
   return results;
 }
 

@@ -392,4 +392,18 @@ module.exports = {
       });
     }
   },
+
+  async getUserCredentials(userID) {
+    const userCollection = db.collection('user');
+    const results = [];
+    await userCollection
+      .where('cpf', '==', userID)
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+          results.push(doc.data().userType);
+        });
+      });
+    return results[0];
+  },
 };

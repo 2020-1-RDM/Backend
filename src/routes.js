@@ -80,11 +80,7 @@ routes.get(
   authMiddleware,
   mentoriaController.getMentoringBySession
 );
-routes.get(
-  '/pendingMentorings',
-  authMiddleware,
-  mentoriaController.getPending
-);
+routes.get('/pendingMentorings', authMiddleware, mentoriaController.getPending);
 
 routes.put(
   '/mentoria/alter/:id',
@@ -93,9 +89,10 @@ routes.put(
   mentoriaController.updateMentoring
 );
 
-routes.put('/mentoria/evaluate/:id',
-authMiddleware,
-mentoriaController.mentoringEvaluation
+routes.put(
+  '/mentoria/evaluate/:id',
+  authMiddleware,
+  mentoriaController.mentoringEvaluation
 );
 
 routes.delete(

@@ -1,6 +1,7 @@
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
+import getUserCredentials from '../user/userController';
 
 const db = admin.firestore();
 
@@ -168,8 +169,13 @@ module.exports = {
     }
   },
 
-  async getPending(request, response){
+  async getPending(request, response) {
     try {
+      const userType = await getUserCredentials(request.tokenCpf);
+      if (userType !== 1) {
+        return response.status(401).send('Unauthorized');
+      }
+
       const mentoringCollection = db.collection('mentoria');
       const results = [];
       await mentoringCollection
@@ -182,9 +188,7 @@ module.exports = {
           });
         });
       if (!results.length) {
-        return response
-          .status(400)
-          .json({ error: 'Sem mentorias pendentes' });
+        return response.status(400).json({ error: 'Sem mentorias pendentes' });
       }
       return response.status(200).json(results);
     } catch (e) {
@@ -192,7 +196,6 @@ module.exports = {
         error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
-
   },
 
   async updateMentoring(request, response) {
@@ -256,29 +259,35 @@ module.exports = {
     }
   },
 
-  async mentoringEvaluation(request, response){
-    const {title, approved} = request.body;
-    const id = request.params.id;
-    let res = null;
+  async mentoringEvaluation(request, response) {
+    try {
+      const { title, approved } = request.body;
+      const { id } = request.params;
+      let res = null;
 
-    const mentoringCollection = db.collection('mentoria');
+      const flagDisable = !approved;
 
-    await mentoringCollection.doc(id).update({
-      title: title,
-      mentoringApproved: approved
-    })
+      const mentoringCollection = db.collection('mentoria');
 
-    await mentoringCollection.doc(id).get()
-    .then(doc => {
-      if (!doc.exists) {
-        console.log('No such document!');
-      } else {
-        res = doc.data();
-      }
-    })
+      await mentoringCollection.doc(id).update({
+        title,
+        mentoringApproved: approved,
+        flagDisable,
+      });
 
-    return response.status(200).send(res)
+      await mentoringCollection
+        .doc(id)
+        .get()
+        .then((doc) => {
+          res = doc.data();
+        });
 
+      return response.status(200).send(res);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao atualizar mentoria : ${e}`,
+      });
+    }
   },
 
   async deactivateMentoring(request, response) {
