@@ -276,6 +276,6 @@ module.exports = {
   },
 
   async emailTest() {
-    thriggerEmail('');
+    thriggerEmail('redementorpucrs@gmail.com');
   },
 };
