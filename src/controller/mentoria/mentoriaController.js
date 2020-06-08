@@ -2,6 +2,9 @@ import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
+// import emailTemplate from ;
+import fs from 'fs';
+import path from 'path'
 
 const db = admin.firestore();
 
@@ -41,14 +44,17 @@ async function getMentoringById(id, menthorID) {
 }
 
 async function thriggerEmail(userEmail) {
+  const html = fs.readFileSync(path.resolve(__dirname,'../../configs/email/email.html'), 'utf8');
   const emailConfiguration = {
     from: '',
     to: userEmail,
     subject: '',
-    html: `<h1>Order Confirmation</h1>
-                      <p>
-                         <b>Email: </b>${userEmail}<br>
-                      </p>`,
+    html: html,
+    attachments: [{
+      filename: "logo_cabecalho.png",
+      path: path.resolve(__dirname,'../../configs/email/logo_cabecalho.png'),
+      cid:'logo'
+    }]
   };
 
   transporter.sendMail(emailConfiguration, (err, data) => {
