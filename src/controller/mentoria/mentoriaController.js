@@ -44,14 +44,14 @@ async function getMentoringById(id, menthorID) {
 
 async function thriggerEmail(userEmail, datas) {
   transporter.use('compile', hbs({
-      viewEngine :{
+    viewEngine: {
       partialsDir: './src/configs/email/views/',
       defaultLayout: 'email',
-      layoutsDir:   './src/configs/email/views/layouts',
-      extName: '.handlebars'  
-      },
-      viewPath: path.resolve('./src/configs/email/views/layouts'),
+      layoutsDir: './src/configs/email/views/layouts',
       extName: '.handlebars'
+    },
+    viewPath: path.resolve('./src/configs/email/views/layouts'),
+    extName: '.handlebars'
   }));
   const emailConfiguration = {
     from: '',
@@ -60,15 +60,15 @@ async function thriggerEmail(userEmail, datas) {
     template: 'email',
     attachments: [{
       filename: "logo_cabecalho.png",
-      path: path.resolve(__dirname,'../../configs/email/logo_cabecalho.png'),
-      cid:'logo'
+      path: path.resolve(__dirname, '../../configs/email/logo_cabecalho.png'),
+      cid: 'logo'
     }],
-    context:{
+    context: {
       mentor: datas.mentor,
       mentorando: datas.mentorando,
       mentoria: datas.mentoria,
       data: datas.data,
-      hora:datas.hora
+      hora: datas.hora
     }
   };
 
@@ -123,7 +123,7 @@ module.exports = {
 
           const mentoringDay = `${currentDate.getDate(currentDate)}/${
             currentDate.getMonth(currentDate) + 1
-          }/${currentDate.getFullYear(currentDate)}`;
+            }/${currentDate.getFullYear(currentDate)}`;
 
           timeDate[j] = {
             day: dayOfWeek[i],
@@ -296,7 +296,43 @@ module.exports = {
     }
   },
 
+  async scheduleMentoring(request, response) {
+    try {
+      const menthoreeID = request.tokenCpf;
+      const { id, dayOfTheMonth, typeMentoring } = request.params;
+      const mentoringCollection = db.collection('mentoria');
+      const mentoring = await getMentoringById(id, menthoreeID);
+      if (!mentoring) {
+        return response
+          .status(404)
+          .send({ error: 'A mentoria não foi encontrada' });
+      }
+
+      const dateTime = mentoring.dateTime;
+
+      dateTime = dateTime.filter((value) => {
+        return value.dayOfTheMonth == dayOfTheMonth;
+      })
+
+      dateTime.times = dateTime.times.filter((value) => {
+        return value.hour == hour;
+      })
+
+      dateTime.times.mentoradoId = menthoreeID;
+      dateTime.times.typeMentoring = typeMentoring;
+
+      await mentoringCollection.doc(mentoring.id).update();
+
+      return response
+        .status(200)
+        .send({ success: true, msg: 'Mentoria desativada' });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao marcar mentoria : ${e}`,
+      });
+    }
+  },
   async emailTest() {
-    thriggerEmail('redementorpucrs@gmail.com', {mentor:'Mentor',mentorando:'Mentorando', hora:'12:30', mentoria: 'Mentoria', data: '12/05/1998'});
+    thriggerEmail('redementorpucrs@gmail.com', { mentor: 'Mentor', mentorando: 'Mentorando', hora: '12:30', mentoria: 'Mentoria', data: '12/05/1998' });
   },
 };
