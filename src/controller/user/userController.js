@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import * as yup from 'yup';
 
 const db = admin.firestore();
 
@@ -86,6 +87,11 @@ async function newMenthor(request, response) {
     const userCollection = db.collection('user');
 
     const user = await getUser(email);
+
+    if (!yup.string().email().isValidSync(email)){
+      return response.status(400).send({error: 'E-mail fora do formanto'});
+    }
+
     if (user) {
       // User already exists
 
