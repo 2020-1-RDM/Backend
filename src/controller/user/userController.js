@@ -20,8 +20,10 @@ async function verifyArea(listAreas) {
     });
   });
 
-  if (!resultArea.includes(listAreas.toLowerCase())) {
-    await areasCollection.add({ name: listAreas });
+  for (let i = 0; i < listAreas.length; i += 1) {
+    if (!resultArea.includes(listAreas[i].toLowerCase())) {
+      await areasCollection.add({ name: listAreas[i] });
+    }
   }
 }
 
@@ -68,7 +70,7 @@ async function addMenthorData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -151,7 +153,7 @@ async function addMenteeData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -241,7 +243,7 @@ module.exports = {
   async insert(request, response) {
     try {
       // eslint-disable-next-line radix
-      const flag = parseInt(request.body.flag);
+      const flag = parseInt(request.body.userType);
 
       if (flag === userType.MENTHOR) {
         await newMenthor(request, response);
@@ -360,7 +362,7 @@ module.exports = {
         .status(200)
         .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
-      return response.status.status(500).json({
+      return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
