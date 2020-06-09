@@ -252,7 +252,6 @@ module.exports = {
     try {
       const mentoringCollection = db.collection('mentoria');
       const { id } = request.query;
-      console.log(id)
       const mentoring = (await mentoringCollection.doc(id).get()).data();
       if (!mentoring)
         return response.status(404).json({
