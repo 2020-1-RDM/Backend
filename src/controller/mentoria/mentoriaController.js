@@ -5,6 +5,7 @@ import transporter from '../../configs/email/email';
 // import emailTemplate from ;
 import fs from 'fs';
 import path from 'path'
+import hbs from 'nodemailer-express-handlebars';
 
 const db = admin.firestore();
 
@@ -44,22 +45,30 @@ async function getMentoringById(id, menthorID) {
 }
 
 async function thriggerEmail(userEmail) {
-  const html = fs.readFileSync(path.resolve(__dirname,'../../configs/email/email.html'), 'utf8');
+
+  transporter.use('compile', hbs({
+      viewEngine :{
+      partialsDir: './src/configs/email/views/',
+      defaultLayout: 'email',
+      layoutsDir:   './src/configs/email/views/layouts',
+      extName: '.handlebars'  
+      },
+      viewPath: path.resolve('./src/configs/email/views/layouts'),
+      extName: '.handlebars'
+  }));
   const emailConfiguration = {
     from: '',
     to: userEmail,
     subject: '',
-    html: html,
-    attachments: [{
-      filename: "logo_cabecalho.png",
-      path: path.resolve(__dirname,'../../configs/email/logo_cabecalho.png'),
-      cid:'logo'
-    }]
+    template: 'email',
+    context:{
+      mentor: 'yupii'
+    }
   };
 
   transporter.sendMail(emailConfiguration, (err, data) => {
     if (err) {
-      console.log(err);
+      console.log(err.stack);
       return;
     }
     console.log(`Sent. ${data}`);
