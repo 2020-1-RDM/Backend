@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
-import * as yup from 'yup';
 
 const db = admin.firestore();
 
@@ -85,15 +84,6 @@ async function newMenthor(request, response) {
     const passwordHash = await bcrypt.hash(password, 8);
 
     const userCollection = db.collection('user');
-
-    const yup = require ('yup');
-    let aux = false;
-    //if (yup.string().email('email')){aux = true};
-    console.log(yup.string().email().isValidSync(email));
-
-    if (!yup.string().email().isValidSync(email)){
-      return response.status(400).send({ error: 'E-mail fora do formato.' });
-    }
 
     const user = await getUser(email);
     if (user) {
