@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import jwtAuth from '../../configs/jwt/auth';
+import * as yup from 'yup';
 
 const db = admin.firestore();
 
@@ -270,6 +271,11 @@ module.exports = {
         if (allDatas[el] === null || allDatas[el] === undefined)
           delete allDatas[el];
       });
+      if (allDatas.email){
+        if (!yup.string().email().isValidSync(allDatas.email)){
+          return response.status(400).send({ error: 'E-mail fora do formato.'});
+        }
+      }
       if (request.file !== undefined) {
         const image = await resizeImage(request.file);
         allDatas.image = image !== allDatas.image ? image : allDatas.image;
