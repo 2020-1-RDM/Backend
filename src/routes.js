@@ -91,6 +91,9 @@ routes.delete(
   authMiddleware,
   mentoriaController.deactivateMentoring
 );
-
-routes.get('/mentoria/schedule', mentoriaController.scheduleMentoring);
+routes.put(
+  '/mentoria/choice/:id',
+  authMiddleware,
+  mentoriaController.choiceMentoring
+);
 export default routes;
