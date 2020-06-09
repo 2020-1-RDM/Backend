@@ -1,9 +1,9 @@
+import path from 'path';
+import hbs from 'nodemailer-express-handlebars';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
-import path from 'path'
-import hbs from 'nodemailer-express-handlebars';
 
 const db = admin.firestore();
 
@@ -43,41 +43,45 @@ async function getMentoringById(id, menthorID) {
 }
 
 async function thriggerEmail(userEmail, datas) {
-  transporter.use('compile', hbs({
-    viewEngine: {
-      partialsDir: './src/configs/email/views/',
-      defaultLayout: 'email',
-      layoutsDir: './src/configs/email/views/layouts',
-      extName: '.handlebars'
-    },
-    viewPath: path.resolve('./src/configs/email/views/layouts'),
-    extName: '.handlebars'
-  }));
+  transporter.use(
+    'compile',
+    hbs({
+      viewEngine: {
+        partialsDir: './src/configs/email/views/',
+        defaultLayout: 'email',
+        layoutsDir: './src/configs/email/views/layouts',
+        extName: '.handlebars',
+      },
+      viewPath: path.resolve('./src/configs/email/views/layouts'),
+      extName: '.handlebars',
+    })
+  );
   const emailConfiguration = {
     from: '',
     to: userEmail,
     subject: '',
     template: 'email',
-    attachments: [{
-      filename: "logo_cabecalho.png",
-      path: path.resolve(__dirname, '../../configs/email/logo_cabecalho.png'),
-      cid: 'logo'
-    }],
+    attachments: [
+      {
+        filename: 'logo_cabecalho.png',
+        path: path.resolve(__dirname, '../../configs/email/logo_cabecalho.png'),
+        cid: 'logo',
+      },
+    ],
     context: {
       mentor: datas.mentor,
       mentorando: datas.mentorando,
       mentoria: datas.mentoria,
       data: datas.data,
-      hora: datas.hora
-    }
+      hora: datas.hora,
+    },
   };
 
-  transporter.sendMail(emailConfiguration, (err, data) => {
+  transporter.sendMail(emailConfiguration, (err) => {
     if (err) {
-      console.log(err.stack);
-      return;
+      return false;
     }
-    console.log(`Sent. ${data}`);
+    return true;
   });
 }
 
@@ -298,41 +302,56 @@ module.exports = {
 
   async scheduleMentoring(request, response) {
     try {
-      const menthoreeID = request.tokenCpf;
-      const { id, dayOfTheMonth, typeMentoring } = request.params;
+      const menthoreeID = request.tokenId;
+      const {
+        dayOfTheMonth,
+        hour,
+        typeMentoring,
+        idMentoring,
+        idMenthor,
+      } = request.body;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthoreeID);
+      const userCollection = db.collection('user');
+      const mentoring = mentoringCollection.doc(idMentoring).get();
+      const menthoree = userCollection.doc(menthoreeID);
+      const menthor = userCollection.doc(idMenthor);
+
       if (!mentoring) {
         return response
           .status(404)
           .send({ error: 'A mentoria não foi encontrada' });
       }
 
-      const dateTime = mentoring.dateTime;
+      const { dateTime } = mentoring;
 
-      dateTime = dateTime.filter((value) => {
-        return value.dayOfTheMonth == dayOfTheMonth;
-      })
+      dateTime.filter((value) => {
+        return value.dayOfTheMonth === dayOfTheMonth;
+      });
 
       dateTime.times = dateTime.times.filter((value) => {
-        return value.hour == hour;
-      })
+        return value.hour === hour;
+      });
 
       dateTime.times.mentoradoId = menthoreeID;
       dateTime.times.typeMentoring = typeMentoring;
 
-      await mentoringCollection.doc(mentoring.id).update();
+      await mentoringCollection.doc(idMentoring).update({ dateTime });
+
+      thriggerEmail(menthor.get().email, {
+        mentor: menthor.get().name,
+        mentorando: menthoree.get().name,
+        hora: hour,
+        mentoria: mentoring.name,
+        data: dayOfTheMonth,
+      });
 
       return response
         .status(200)
-        .send({ success: true, msg: 'Mentoria desativada' });
+        .send({ success: true, msg: 'Mentoria marcada.' });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao marcar mentoria : ${e}`,
       });
     }
-  },
-  async emailTest() {
-    thriggerEmail('redementorpucrs@gmail.com', { mentor: 'Mentor', mentorando: 'Mentorando', hora: '12:30', mentoria: 'Mentoria', data: '12/05/1998' });
   },
 };
