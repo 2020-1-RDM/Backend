@@ -2,8 +2,6 @@ import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
-// import emailTemplate from ;
-import fs from 'fs';
 import path from 'path'
 import hbs from 'nodemailer-express-handlebars';
 
@@ -44,8 +42,7 @@ async function getMentoringById(id, menthorID) {
   return mentoring;
 }
 
-async function thriggerEmail(userEmail) {
-
+async function thriggerEmail(userEmail, datas) {
   transporter.use('compile', hbs({
       viewEngine :{
       partialsDir: './src/configs/email/views/',
@@ -67,7 +64,11 @@ async function thriggerEmail(userEmail) {
       cid:'logo'
     }],
     context:{
-      mentor: 'yupii'
+      mentor: datas.mentor,
+      mentorando: datas.mentorando,
+      mentoria: datas.mentoria,
+      data: datas.data,
+      hora:datas.hora
     }
   };
 
@@ -296,6 +297,6 @@ module.exports = {
   },
 
   async emailTest() {
-    thriggerEmail('redementorpucrs@gmail.com');
+    thriggerEmail('redementorpucrs@gmail.com', {mentor:'Mentor',mentorando:'Mentorando', hora:'12:30', mentoria: 'Mentoria', data: '12/05/1998'});
   },
 };
