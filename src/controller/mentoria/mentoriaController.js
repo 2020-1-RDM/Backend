@@ -61,6 +61,11 @@ async function thriggerEmail(userEmail) {
     to: userEmail,
     subject: '',
     template: 'email',
+    attachments: [{
+      filename: "logo_cabecalho.png",
+      path: path.resolve(__dirname,'../../configs/email/logo_cabecalho.png'),
+      cid:'logo'
+    }],
     context:{
       mentor: 'yupii'
     }
