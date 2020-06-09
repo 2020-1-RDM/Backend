@@ -273,9 +273,12 @@ module.exports = {
   async getPending(request, response) {
     try {
       const userType = await getUserCredentials(request.tokenCpf);
-      if (userType !== 1) {
+      if (userType !== 0) {
         return response.status(401).send('Unauthorized');
       }
+
+      let i = 0;
+      const mentorInfos = await getMentores();
 
       const mentoringCollection = db.collection('mentoria');
       const results = [];
@@ -285,7 +288,19 @@ module.exports = {
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
-            results.push(doc.data());
+            for (i = 0; i < mentorInfos.length; i += 1) {
+              if (mentorInfos[i].cpf === doc.data().cpf) {
+                break;
+              }
+            }
+            results.push({
+              id: doc.id,
+              data: doc.data(),
+              mentorInfos: {
+                name: mentorInfos[i].name,
+                image: mentorInfos[i].image,
+              },
+            });
           });
         });
       if (!results.length) {
