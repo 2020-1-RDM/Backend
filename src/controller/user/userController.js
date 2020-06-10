@@ -10,23 +10,6 @@ const userType = {
   BOTH: 3,
 };
 
-async function verifyArea(listAreas) {
-  const areasCollection = db.collection('area_conhecimento');
-  const resultArea = [];
-
-  await areasCollection.get().then((snapshot) => {
-    return snapshot.forEach((res) => {
-      resultArea.push(res.data().name.toLowerCase());
-    });
-  });
-
-  for (let i = 0; i < listAreas.length; i += 1) {
-    if (!resultArea.includes(listAreas[i].toLowerCase())) {
-      await areasCollection.add({ name: listAreas[i] });
-    }
-  }
-}
-
 async function getUser(email) {
   const userCollection = db.collection('user');
   let user = null;
@@ -53,8 +36,6 @@ async function getUser(email) {
 async function addMenthorData(newData, response) {
   try {
     const { linkedin, areas, userId, userCollection } = newData;
-
-    await verifyArea(areas);
 
     if (linkedin) {
       await userCollection.doc(userId).update({ linkedin });
@@ -109,8 +90,6 @@ async function newMenthor(request, response) {
       // User exists but it's type is different
       return addMenthorData(newData, response);
     }
-
-    verifyArea(areas);
 
     const currentUserType = userType.MENTHOR;
 
@@ -283,12 +262,10 @@ module.exports = {
       const passwordHash = await bcrypt.hash(password, 8);
 
       const user = await getUser(email);
-      const resultArea = [];
+
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
-
-      await verifyArea(areas);
 
       const newImage = image && image !== user.image ? image : user.image;
 
@@ -301,7 +278,7 @@ module.exports = {
         email,
         userType: flag,
         image: newImage,
-        areas: resultArea,
+        areas,
       });
 
       return response
