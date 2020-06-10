@@ -1,7 +1,7 @@
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
-import {getUserCredentials} from '../user/userController';
+import { getUserCredentials } from '../user/userController';
 
 const db = admin.firestore();
 
