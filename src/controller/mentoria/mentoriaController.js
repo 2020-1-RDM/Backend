@@ -143,15 +143,9 @@ module.exports = {
           }
           currentDate.setDate(currentDate.getDate() + sumForFirstDay);
 
-<<<<<<< HEAD
-          const mentoringDay = `${currentDate.getDate(currentDate)}/${
-            currentDate.getMonth(currentDate) + 1
-            }/${currentDate.getFullYear(currentDate)}`;
-=======
           const mentoringDay = `${currentDate.getDate()}/${
             currentDate.getMonth() + 1
           }/${currentDate.getFullYear()}`;
->>>>>>> dev
 
           dates[k] = {
             day: days[i],
@@ -228,7 +222,7 @@ module.exports = {
       const results = [];
       await mentoringCollection
         .where('flagDisable', '==', false)
-        .where('isVisible', "==", true)
+        .where('isVisible', '==', true)
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
@@ -341,7 +335,7 @@ module.exports = {
       }
 
       const flag = {
-        flagDisable: true
+        flagDisable: true,
       };
 
       await mentoringCollection.doc(id).update(flag);
@@ -356,7 +350,6 @@ module.exports = {
     }
   },
 
-<<<<<<< HEAD
   async changeVisibility(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
@@ -364,30 +357,26 @@ module.exports = {
       const mentoring = (await mentoringCollection.doc(id).get()).data();
       if (!mentoring)
         return response.status(404).json({
-          error: `Mentoria não encontrada : ${e}`,
+          error: `Mentoria não encontrada.`,
         });
-      if (mentoring.hasOwnProperty('isVisible'))
-        mentoring.isVisible = (mentoring.isVisible) ? false : true;
-      else
-        mentoring.isVisible = false;
 
-      await mentoringCollection.doc(id).update({ isVisible: mentoring.isVisible })
+      if (Object.prototype.hasOwnProperty.call(mentoring, 'isVisible'))
+        mentoring.isVisible = !mentoring.isVisible;
+      else mentoring.isVisible = false;
+
+      await mentoringCollection
+        .doc(id)
+        .update({ isVisible: mentoring.isVisible });
       let finalMessage = 'Mentoria esta invisível';
-      if (mentoring.isVisible)
-        finalMessage = 'Mentoria esta visível';
-      return response
-        .status(200)
-        .send({ success: true, msg: finalMessage });
-
+      if (mentoring.isVisible) finalMessage = 'Mentoria esta visível';
+      return response.status(200).send({ success: true, msg: finalMessage });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao trocar visibilidade de mentoria : ${e}`,
       });
     }
-  }
+  },
 
-};
-=======
   async choiceMentoring(request, response) {
     try {
       const { typeMentoring, descProject, date, hour } = request.body;
@@ -432,4 +421,3 @@ module.exports = {
     }
   },
 };
->>>>>>> dev
