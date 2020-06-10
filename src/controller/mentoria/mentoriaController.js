@@ -4,7 +4,7 @@ import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
-
+import getUser from '../user/userController';
 const db = admin.firestore();
 
 async function getMentoringByMenthor(menthorID) {
@@ -29,26 +29,6 @@ async function getMentoringByMenthor(menthorID) {
   } catch (e) {
     return null;
   }
-}
-
-async function getUser(cpf) {
-  const userCollection = db.collection('user');
-  let user = null;
-  await userCollection
-    .where('cpf', '==', cpf)
-    .get()
-    .then((snapshot) => {
-      return snapshot.forEach((res) => {
-        user = {
-          id: res.id,
-          data: res.data(),
-        };
-      });
-    });
-  if (!user) {
-    return null;
-  }
-  return user;
 }
 
 function checkSameHour(days, hours) {
