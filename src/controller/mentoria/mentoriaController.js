@@ -133,9 +133,8 @@ async function thriggerEmail(userEmail, datas) {
     })
   );
   const emailConfiguration = {
-    from: '',
     to: userEmail,
-    subject: '',
+    subject: 'Mentoria agendada.',
     template: 'email',
     attachments: [
       {
