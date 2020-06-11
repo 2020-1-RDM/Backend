@@ -150,7 +150,7 @@ module.exports = {
 
           const mentoringDay = `${currentDate.getDate()}/${
             currentDate.getMonth() + 1
-          }/${currentDate.getFullYear()}`;
+            }/${currentDate.getFullYear()}`;
 
           dates[k] = {
             day: days[i],
@@ -269,57 +269,38 @@ module.exports = {
 
   async updateMentoring(request, response) {
     try {
-      const {
-        title,
-        description,
-        knowledgeArea,
-        mentoringOption,
-        dayOfWeek,
-        time,
-      } = request.body;
-      let image;
-      if (request.file) {
-        image = await resizeImage(request.file);
-      }
+      const allDatas = request.body;
       const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoringById(id, menthorID);
+
+
       if (!mentoring) {
         return response
           .status(404)
           .send({ error: 'A mentoria não foi encontrada' });
       }
+      
+      Object.keys(allDatas).forEach((el) => {
+        if (allDatas[el] === null || allDatas[el] === undefined)
+          delete allDatas[el];
+      });
 
-      const update = {};
-      update.title =
-        title && title !== mentoring.title ? title : mentoring.title;
-      update.description =
-        description && description !== mentoring.description
-          ? description
-          : mentoring.description;
-      update.knowledgeArea =
-        knowledgeArea && knowledgeArea !== mentoring.knowledgeArea
-          ? knowledgeArea
-          : mentoring.knowledgeArea;
-      update.mentoringOption =
-        mentoringOption && mentoringOption !== mentoring.mentoringOption
-          ? mentoringOption
-          : mentoring.mentoringOption;
-      update.dayOfWeek =
-        dayOfWeek && dayOfWeek !== mentoring.dayOfWeek
-          ? dayOfWeek
-          : mentoring.dayOfWeek;
-      update.time = time && time !== mentoring.time ? time : mentoring.time;
-      update.image =
-        image && image !== mentoring.image ? image : mentoring.image;
+      if (request.file !== undefined) {
+        const image = await resizeImage(request.file);
+        allDatas.image = image !== allDatas.image ? image : allDatas.image;
+      } else if (!allDatas.image) {
+        delete allDatas.image;
+      }
 
-      await mentoringCollection.doc(id).update(update);
+
+      await mentoringCollection.doc(id).update(allDatas);
 
       return response.status(200).send({
         success: true,
         msg: 'Mentoria atualizada com sucesso',
-        data: update,
+        data: allDatas,
       });
     } catch (e) {
       return response.status(500).json({
