@@ -1,6 +1,6 @@
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
-import getFirstDate from '../../helper/firstMetoringHelper';
+import getNextDateTime from '../../helper/getNextDateTimeHelper';
 
 const db = admin.firestore();
 
@@ -116,9 +116,9 @@ module.exports = {
       const mentoringCollection = db.collection('mentoria');
 
       // controls the number of weeks to be scheduled
-      const weeksController = 4;
+
       const dates = [];
-      let k = 0;
+      // let k = 0;
       let days = [];
       let hours = [];
 
@@ -136,38 +136,7 @@ module.exports = {
         hours = time;
       }
 
-      for (let i = 0; i < days.length; i += 1) {
-        const currentDate = new Date();
-
-        // eslint-disable-next-line no-await-in-loop
-        let sumForFirstDay = await getFirstDate(days[i], currentDate);
-
-        for (let j = 0; j < weeksController; j += 1) {
-          if (j !== 0) {
-            sumForFirstDay = 7;
-          }
-          currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-
-          const mentoringDay = `${currentDate.getDate()}/${
-            currentDate.getMonth() + 1
-            }/${currentDate.getFullYear()}`;
-
-          dates[k] = {
-            day: days[i],
-            dayOfTheMonth: mentoringDay,
-            times: [
-              {
-                hour: hours[i],
-                flagBusy: false,
-                typeMentoring: null,
-                descProject: null,
-                mentoradoId: null,
-              },
-            ],
-          };
-          k += 1;
-        }
-      }
+      const date = await getNextDateTime(dates, days, hours);
 
       await mentoringCollection.add({
         image,
@@ -177,7 +146,7 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         flagDisable: signalFlag,
-        dateTime: dates,
+        dateTime: date,
       });
 
       return response.status(200).send({ success: true });
@@ -275,13 +244,12 @@ module.exports = {
       const mentoringCollection = db.collection('mentoria');
       const mentoring = await getMentoringById(id, menthorID);
 
-
       if (!mentoring) {
         return response
           .status(404)
           .send({ error: 'A mentoria não foi encontrada' });
       }
-      
+
       Object.keys(allDatas).forEach((el) => {
         if (allDatas[el] === null || allDatas[el] === undefined)
           delete allDatas[el];
@@ -293,7 +261,8 @@ module.exports = {
       } else if (!allDatas.image) {
         delete allDatas.image;
       }
-
+      // const date = await getNextDateTime([], [], []);
+      // console.log(date);
 
       await mentoringCollection.doc(id).update(allDatas);
 
