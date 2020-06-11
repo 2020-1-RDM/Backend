@@ -261,9 +261,28 @@ module.exports = {
       } else if (!allDatas.image) {
         delete allDatas.image;
       }
-      // const date = await getNextDateTime([], [], []);
-      // console.log(date);
 
+      const dayOfWeek = allDatas.dayOfWeek;
+      const time = allDatas.time;
+
+      const dates = [];
+      let days = [];
+      let hours = [];
+
+      if (!Array.isArray(dayOfWeek)) {
+        days.push(dayOfWeek);
+        hours.push(time);
+      } else {
+        if (checkSameHour(dayOfWeek, time)) {
+          return response
+            .status(400)
+            .json({ error: 'Foram selecionado dias e horários iguais!' });
+        }
+        days = dayOfWeek;
+        hours = time;
+      }
+
+      allDatas.dateTime = await getNextDateTime(dates, days, hours);
       await mentoringCollection.doc(id).update(allDatas);
 
       return response.status(200).send({
