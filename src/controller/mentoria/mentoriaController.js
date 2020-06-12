@@ -4,7 +4,7 @@ import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
-import getUser from '../user/userController';
+import importUser from '../user/userController';
 const db = admin.firestore();
 
 async function getMentoringByMenthor(menthorID) {
@@ -428,8 +428,8 @@ module.exports = {
 
       if (isAvailable) {
         await mentoringCollection.doc(id).update(mentoring);
-        const mentor = (await getUser(mentoring.cpf)).data;
-        const mentorando = (await getUser(mentoradoId)).data;
+        const mentor = (await importUser(mentoring.cpf)).data;
+        const mentorando = (await importUser(mentoradoId)).data;
         const datas = {
           mentor: mentor.name,
           mentorando: mentorando.name,
