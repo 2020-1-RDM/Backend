@@ -81,7 +81,20 @@ async function getMentores() {
 
   const results = [];
   await userCollection
-    .where('userType', '!==', 2)
+    .where('userType', '<', 2)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        results.push({
+          cpf: res.data().cpf,
+          name: res.data().name,
+          image: res.data().image,
+        });
+      });
+    });
+
+  await userCollection
+    .where('userType', '>', 2)
     .get()
     .then((snapshot) => {
       return snapshot.forEach((res) => {
@@ -294,15 +307,15 @@ module.exports = {
             };
             for (i = 0; i < mentorInfos.length; i += 1) {
               if (mentorInfos[i].cpf === doc.data().cpf) {
-                mentorInfo.name = doc.data().name;
-                mentorInfo.image = doc.data().image;
+                mentorInfo.name = mentorInfos[i].name;
+                mentorInfo.image = mentorInfos[i].image;
                 break;
               }
             }
             results.push({
               id: doc.id,
               data: doc.data(),
-              mentorInfos: mentorInfo,
+              mentorInfo,
             });
           });
         });
