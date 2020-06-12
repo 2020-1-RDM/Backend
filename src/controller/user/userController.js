@@ -10,21 +10,6 @@ const userType = {
   BOTH: 3,
 };
 
-async function verifyArea(listAreas) {
-  const areasCollection = db.collection('area_conhecimento');
-  const resultArea = [];
-
-  await areasCollection.get().then((snapshot) => {
-    return snapshot.forEach((res) => {
-      resultArea.push(res.data().name.toLowerCase());
-    });
-  });
-
-  if (!resultArea.includes(listAreas.toLowerCase())) {
-    await areasCollection.add({ name: listAreas });
-  }
-}
-
 async function getUser(email) {
   const userCollection = db.collection('user');
   let user = null;
@@ -52,8 +37,6 @@ async function addMenthorData(newData, response) {
   try {
     const { linkedin, areas, userId, userCollection } = newData;
 
-    await verifyArea(areas);
-
     if (linkedin) {
       await userCollection.doc(userId).update({ linkedin });
     }
@@ -68,7 +51,7 @@ async function addMenthorData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -107,8 +90,6 @@ async function newMenthor(request, response) {
       // User exists but it's type is different
       return addMenthorData(newData, response);
     }
-
-    verifyArea(areas);
 
     const currentUserType = userType.MENTHOR;
 
@@ -151,7 +132,7 @@ async function addMenteeData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -241,7 +222,7 @@ module.exports = {
   async insert(request, response) {
     try {
       // eslint-disable-next-line radix
-      const flag = parseInt(request.body.flag);
+      const flag = parseInt(request.body.userType);
 
       if (flag === userType.MENTHOR) {
         await newMenthor(request, response);
@@ -281,12 +262,10 @@ module.exports = {
       const passwordHash = await bcrypt.hash(password, 8);
 
       const user = await getUser(email);
-      const resultArea = [];
+
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
-
-      await verifyArea(areas);
 
       const newImage = image && image !== user.image ? image : user.image;
 
@@ -299,7 +278,7 @@ module.exports = {
         email,
         userType: flag,
         image: newImage,
-        areas: resultArea,
+        areas,
       });
 
       return response
@@ -360,7 +339,7 @@ module.exports = {
         .status(200)
         .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
-      return response.status.status(500).json({
+      return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
