@@ -81,7 +81,7 @@ async function getMentores() {
 
   const results = [];
   await userCollection
-    .where('userType', '==', 1)
+    .where('userType', '!==', 2)
     .get()
     .then((snapshot) => {
       return snapshot.forEach((res) => {
@@ -288,18 +288,21 @@ module.exports = {
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
+            const mentorInfo = {
+              name: 'Não encontrado',
+              image: '',
+            };
             for (i = 0; i < mentorInfos.length; i += 1) {
               if (mentorInfos[i].cpf === doc.data().cpf) {
+                mentorInfo.name = doc.data().name;
+                mentorInfo.image = doc.data().image;
                 break;
               }
             }
             results.push({
               id: doc.id,
               data: doc.data(),
-              mentorInfos: {
-                name: mentorInfos[i].name,
-                image: mentorInfos[i].image,
-              },
+              mentorInfos: mentorInfo,
             });
           });
         });
