@@ -64,7 +64,6 @@ async function addMenthorData(newData, response) {
     if (areas) {
       await userCollection.doc(userId).update({ areas });
     }
-
     const currentUserType = userType.BOTH;
     await userCollection.doc(userId).update({ userType: currentUserType });
 
