@@ -4,7 +4,7 @@ import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
-import importUser from '../user/userController';
+import { importUser } from '../user/userController';
 const db = admin.firestore();
 
 async function getMentoringByMenthor(menthorID) {

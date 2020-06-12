@@ -45,26 +45,6 @@ async function getUser(email) {
   return user;
 }
 
-async function importUser(cpf) {
-  const userCollection = db.collection('user');
-  let user = null;
-  await userCollection
-    .where('cpf', '==', cpf)
-    .get()
-    .then((snapshot) => {
-      return snapshot.forEach((res) => {
-        user = {
-          id: res.id,
-          data: res.data(),
-        };
-      });
-    });
-  if (!user) {
-    return null;
-  }
-  return user;
-}
-
 // Auxiliary create functions
 
 // Adds menthor data to an existing user of type mentee
@@ -412,7 +392,6 @@ module.exports = {
       });
     }
   },
-
 
   async importUser(cpf) {
     const userCollection = db.collection('user');
