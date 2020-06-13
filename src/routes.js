@@ -96,5 +96,4 @@ routes.put(
   authMiddleware,
   mentoriaController.choiceMentoring
 );
-
 export default routes;
