@@ -147,7 +147,7 @@ module.exports = {
         title,
         description,
         knowledgeArea,
-        mentoringOption,
+        mentoringOption = [],
         dayOfWeek = [],
         time = [],
       } = request.body;
