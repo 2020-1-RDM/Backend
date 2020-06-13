@@ -430,12 +430,13 @@ module.exports = {
         await mentoringCollection.doc(id).update(mentoring);
         const mentor = (await importUser(mentoring.cpf)).data;
         const mentorando = (await importUser(mentoradoId)).data;
+        const hora = hour.substring(0, 5);
         const datas = {
           mentor: mentor.name,
           mentorando: mentorando.name,
           mentoria: mentoring.title,
           data: date,
-          hora: hour,
+          hora,
           descMentoria: descProject,
           tipoMentoria: typeMentoring,
         };
