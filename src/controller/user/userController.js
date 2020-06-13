@@ -13,22 +13,6 @@ const userType = {
   BOTH: 3,
 };
 
-async function verifyArea(listAreas) {
-  const areasCollection = db.collection('area_conhecimento');
-  const resultArea = [];
-
-  await areasCollection.get().then((snapshot) => {
-    return snapshot.forEach((res) => {
-      resultArea.push(res.data().name.toLowerCase());
-    });
-  });
-  listAreas.forEach(async (el) => {
-    if (!resultArea.includes(el.toLowerCase())) {
-      await areasCollection.add({ name: el });
-    }
-  });
-}
-
 async function getUser(email) {
   const userCollection = db.collection('user');
   let user = null;
@@ -56,8 +40,6 @@ async function addMenthorData(newData, response) {
   try {
     const { linkedin, areas, userId, userCollection } = newData;
 
-    await verifyArea(areas);
-
     if (linkedin) {
       await userCollection.doc(userId).update({ linkedin });
     }
@@ -71,7 +53,7 @@ async function addMenthorData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -89,6 +71,11 @@ async function newMenthor(request, response) {
     const userCollection = db.collection('user');
 
     const user = await getUser(email);
+
+    if (!yup.string().email().isValidSync(email)){
+      return response.status(400).send({error: 'E-mail fora do formanto'});
+    }
+
     if (user) {
       // User already exists
 
@@ -110,8 +97,6 @@ async function newMenthor(request, response) {
       // User exists but it's type is different
       return addMenthorData(newData, response);
     }
-
-    await verifyArea(areas);
 
     const currentUserType = userType.MENTHOR;
 
@@ -154,7 +139,7 @@ async function addMenteeData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -270,6 +255,7 @@ module.exports = {
         if (allDatas[el] === null || allDatas[el] === undefined)
           delete allDatas[el];
       });
+
       if (allDatas.email) {
         if (!yup.string().email().isValidSync(allDatas.email)) {
           return response
@@ -292,7 +278,6 @@ module.exports = {
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
-      if (allDatas.areas) await verifyArea(allDatas.areas);
 
       await userCollection.doc(user.id).update(allDatas);
 
@@ -309,6 +294,60 @@ module.exports = {
           }
         ),
       });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao atualizar usuário : ${e}`,
+      });
+    }
+  },
+
+  async updateMentee(request, response) {
+    try {
+      const {
+        name,
+        birthDate,
+        cpf,
+        phone,
+        email,
+        registration,
+        password,
+      } = request.body;
+
+      const image = await resizeImage(request.file);
+
+      const userCollection = db.collection('user');
+
+      const user = await getUser(email);
+      if (!user) {
+        return response.status(400).send({ error: 'Usuário não existe' });
+      }
+
+      if (name) {
+        await userCollection.doc(user.id).update({ name });
+      }
+      if (birthDate) {
+        await userCollection.doc(user.id).update({ birthDate });
+      }
+      if (cpf) {
+        await userCollection.doc(user.id).update({ cpf });
+      }
+      if (phone) {
+        await userCollection.doc(user.id).update({ phone });
+      }
+      if (registration) {
+        await userCollection.doc(user.id).update({ registration });
+      }
+      if (password) {
+        const passwordHash = await bcrypt.hash(password, 8);
+        await userCollection.doc(user.id).update({ password: passwordHash });
+      }
+      if (image) {
+        await userCollection.doc(user.id).update({ image });
+      }
+
+      return response
+        .status(200)
+        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,

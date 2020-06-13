@@ -13,7 +13,7 @@ const routes = new Router();
 /*
    Routes of autoconhecimento
  */
-routes.get('/areasDisponiveis', authMiddleware, knowledgeAreasController.get);
+routes.get('/areasDisponiveis', knowledgeAreasController.get);
 routes.get(
   '/areaConhecimento',
   authMiddleware,
