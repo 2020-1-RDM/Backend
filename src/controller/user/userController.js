@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import * as yup from 'yup';
 
 const db = admin.firestore();
 
@@ -9,21 +10,6 @@ const userType = {
   MENTEE: 2,
   BOTH: 3,
 };
-
-async function verifyArea(listAreas) {
-  const areasCollection = db.collection('area_conhecimento');
-  const resultArea = [];
-
-  await areasCollection.get().then((snapshot) => {
-    return snapshot.forEach((res) => {
-      resultArea.push(res.data().name.toLowerCase());
-    });
-  });
-
-  if (!resultArea.includes(listAreas.toLowerCase())) {
-    await areasCollection.add({ name: listAreas });
-  }
-}
 
 async function getUser(email) {
   const userCollection = db.collection('user');
@@ -52,8 +38,6 @@ async function addMenthorData(newData, response) {
   try {
     const { linkedin, areas, userId, userCollection } = newData;
 
-    await verifyArea(areas);
-
     if (linkedin) {
       await userCollection.doc(userId).update({ linkedin });
     }
@@ -68,7 +52,7 @@ async function addMenthorData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -86,6 +70,11 @@ async function newMenthor(request, response) {
     const userCollection = db.collection('user');
 
     const user = await getUser(email);
+
+    if (!yup.string().email().isValidSync(email)){
+      return response.status(400).send({error: 'E-mail fora do formanto'});
+    }
+
     if (user) {
       // User already exists
 
@@ -107,8 +96,6 @@ async function newMenthor(request, response) {
       // User exists but it's type is different
       return addMenthorData(newData, response);
     }
-
-    verifyArea(areas);
 
     const currentUserType = userType.MENTHOR;
 
@@ -151,7 +138,7 @@ async function addMenteeData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -241,7 +228,7 @@ module.exports = {
   async insert(request, response) {
     try {
       // eslint-disable-next-line radix
-      const flag = parseInt(request.body.flag);
+      const flag = parseInt(request.body.userType);
 
       if (flag === userType.MENTHOR) {
         await newMenthor(request, response);
@@ -281,12 +268,10 @@ module.exports = {
       const passwordHash = await bcrypt.hash(password, 8);
 
       const user = await getUser(email);
-      const resultArea = [];
+
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
-
-      await verifyArea(areas);
 
       const newImage = image && image !== user.image ? image : user.image;
 
@@ -299,7 +284,7 @@ module.exports = {
         email,
         userType: flag,
         image: newImage,
-        areas: resultArea,
+        areas,
       });
 
       return response
@@ -360,7 +345,7 @@ module.exports = {
         .status(200)
         .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
-      return response.status.status(500).json({
+      return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
@@ -391,6 +376,26 @@ module.exports = {
         error: `Erro ao deletar usuário: ${e}`,
       });
     }
+  },
+
+  async importUser(cpf) {
+    const userCollection = db.collection('user');
+    let user = null;
+    await userCollection
+      .where('cpf', '==', cpf)
+      .get()
+      .then((snapshot) => {
+        return snapshot.forEach((res) => {
+          user = {
+            id: res.id,
+            data: res.data(),
+          };
+        });
+      });
+    if (!user) {
+      return null;
+    }
+    return user;
   },
 
   async getUserCredentials(userID) {

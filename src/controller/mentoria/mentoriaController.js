@@ -1,7 +1,11 @@
+import path from 'path';
+import hbs from 'nodemailer-express-handlebars';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import { getUserCredentials } from '../user/userController';
+import transporter from '../../configs/email/email';
+import { importUser } from '../user/userController';
 
 const db = admin.firestore();
 
@@ -109,6 +113,47 @@ async function getMentores() {
   return results;
 }
 
+async function triggerEmail(userEmail, datas) {
+  transporter.use(
+    'compile',
+    hbs({
+      viewEngine: {
+        partialsDir: './src/configs/email/views/',
+        defaultLayout: 'email',
+        layoutsDir: './src/configs/email/views/layouts',
+        extName: '.handlebars',
+      },
+      viewPath: path.resolve('./src/configs/email/views/layouts'),
+      extName: '.handlebars',
+    })
+  );
+  const emailConfiguration = {
+    to: userEmail,
+    subject: 'Mentoria agendada.',
+    template: 'email',
+    attachments: [
+      {
+        filename: 'logo_cabecalho.png',
+        path: path.resolve(__dirname, '../../configs/email/logo_cabecalho.png'),
+        cid: 'logo',
+      },
+    ],
+    context: {
+      mentor: datas.mentor,
+      mentorando: datas.mentorando,
+      mentoria: datas.mentoria,
+      data: datas.data,
+      hora: datas.hora,
+      descricao: datas.descMentoria,
+      tipoMentoria: datas.tipoMentoria,
+    },
+  };
+
+  transporter.sendMail(emailConfiguration, (err) => {
+    return !err;
+  });
+}
+
 module.exports = {
   async insert(request, response) {
     try {
@@ -116,7 +161,7 @@ module.exports = {
         title,
         description,
         knowledgeArea,
-        mentoringOption,
+        mentoringOption = [],
         dayOfWeek = [],
         time = [],
       } = request.body;
@@ -448,7 +493,6 @@ module.exports = {
       });
     }
   },
-
   async choiceMentoring(request, response) {
     try {
       const { typeMentoring, descProject, date, hour } = request.body;
@@ -457,6 +501,7 @@ module.exports = {
       const mentoradoId = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
+
       const mentoring = await getMentoriaByMentoringId(id);
 
       for (let x = 0; x < mentoring.dateTime.length; x += 1) {
@@ -477,6 +522,20 @@ module.exports = {
 
       if (isAvailable) {
         await mentoringCollection.doc(id).update(mentoring);
+        const mentor = (await importUser(mentoring.cpf)).data;
+        const mentorando = (await importUser(mentoradoId)).data;
+        const hora = hour.substring(0, 5);
+        const datas = {
+          mentor: mentor.name,
+          mentorando: mentorando.name,
+          mentoria: mentoring.title,
+          data: date,
+          hora,
+          descMentoria: descProject,
+          tipoMentoria: typeMentoring,
+        };
+        await triggerEmail(mentor.email, datas);
+
         return response.status(200).send({
           success: true,
           msg: 'Inscrição efetuada',
