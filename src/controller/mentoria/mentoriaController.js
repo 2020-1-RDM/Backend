@@ -5,6 +5,7 @@ import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
 import transporter from '../../configs/email/email';
 import { importUser } from '../user/userController';
+
 const db = admin.firestore();
 
 async function getMentoringByMenthor(menthorID) {
@@ -129,14 +130,13 @@ async function triggerEmail(userEmail, datas) {
       mentoria: datas.mentoria,
       data: datas.data,
       hora: datas.hora,
+      descricao: datas.descMentoria,
+      tipoMentoria: datas.tipoMentoria,
     },
   };
 
   transporter.sendMail(emailConfiguration, (err) => {
-    if (err) {
-      return false;
-    }
-    return true;
+    return !err;
   });
 }
 
@@ -436,6 +436,8 @@ module.exports = {
           mentoria: mentoring.title,
           data: date,
           hora: hour,
+          descMentoria: descProject,
+          tipoMentoria: typeMentoring,
         };
         await triggerEmail(mentor.email, datas);
 
