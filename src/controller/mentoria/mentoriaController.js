@@ -437,7 +437,7 @@ module.exports = {
           data: date,
           hora: hour,
         };
-        triggerEmail(mentor.email, datas);
+        await triggerEmail(mentor.email, datas);
 
         return response.status(200).send({
           success: true,
