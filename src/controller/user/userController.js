@@ -72,8 +72,8 @@ async function newMenthor(request, response) {
 
     const user = await getUser(email);
 
-    if (!yup.string().email().isValidSync(email)){
-      return response.status(400).send({error: 'E-mail fora do formanto'});
+    if (!yup.string().email().isValidSync(email)) {
+      return response.status(400).send({ error: 'E-mail fora do formanto' });
     }
 
     if (user) {
@@ -266,9 +266,8 @@ module.exports = {
       if (request.file !== undefined) {
         const image = await resizeImage(request.file);
         allDatas.image = image !== allDatas.image ? image : allDatas.image;
-      } else if (!allDatas.image) {
-        delete allDatas.image;
       }
+
       if (allDatas.userType)
         allDatas.userType = parseInt(allDatas.userType, 10);
 
