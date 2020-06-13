@@ -98,7 +98,7 @@ async function getMentores() {
   return results;
 }
 
-async function thriggerEmail(userEmail, datas) {
+async function triggerEmail(userEmail, datas) {
   transporter.use(
     'compile',
     hbs({
@@ -437,7 +437,7 @@ module.exports = {
           data: date,
           hora: hour,
         };
-        thriggerEmail(mentor.email, datas);
+        triggerEmail(mentor.email, datas);
 
         return response.status(200).send({
           success: true,
