@@ -93,6 +93,7 @@ async function getMentores() {
           cpf: res.data().cpf,
           name: res.data().name,
           image: res.data().image,
+          email: res.data().email,
         });
       });
     });
@@ -106,6 +107,7 @@ async function getMentores() {
           cpf: res.data().cpf,
           name: res.data().name,
           image: res.data().image,
+          email: res.data().email,
         });
       });
     });
@@ -349,11 +351,13 @@ module.exports = {
             const mentorInfo = {
               name: 'Não encontrado',
               image: '',
+              email: '',
             };
             for (i = 0; i < mentorInfos.length; i += 1) {
               if (mentorInfos[i].cpf === doc.data().cpf) {
                 mentorInfo.name = mentorInfos[i].name;
                 mentorInfo.image = mentorInfos[i].image;
+                mentorInfo.email = mentorInfos[i].email;
                 break;
               }
             }
@@ -438,11 +442,28 @@ module.exports = {
 
   async mentoringEvaluation(request, response) {
     try {
-      const { title, approved } = request.body;
+      const { title, approved, mentorEmail } = request.body;
       const { id } = request.params;
       let res = null;
 
       const flagDisable = !approved;
+
+      if (flagDisable) {
+        const email = {
+          from: process.env.EMAIL_USER,
+          to: mentorEmail,
+          subject: `Mentoria não Aprovada`,
+          text: `Sua mentoria de título "${title}" não foi aprovada.\nEntre em contato com o administrador para mais detalhes.`,
+        };
+
+        transporter.sendMail(email, (error) => {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log('Email enviado com sucesso.');
+          }
+        });
+      }
 
       const mentoringCollection = db.collection('mentoria');
 
