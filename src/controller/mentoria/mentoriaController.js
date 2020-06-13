@@ -3,9 +3,8 @@ import hbs from 'nodemailer-express-handlebars';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
-import { getUserCredentials } from '../user/userController';
+import { getUserCredentials, importUser } from '../user/userController';
 import transporter from '../../configs/email/email';
-import { importUser } from '../user/userController';
 
 const db = admin.firestore();
 
@@ -368,9 +367,6 @@ module.exports = {
             });
           });
         });
-      if (!results.length) {
-        return response.status(400).json({ error: 'Sem mentorias pendentes' });
-      }
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
