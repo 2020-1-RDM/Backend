@@ -368,9 +368,6 @@ module.exports = {
             });
           });
         });
-      if (!results.length) {
-        return response.status(400).json({ error: 'Sem mentorias pendentes' });
-      }
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
