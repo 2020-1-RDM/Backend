@@ -1,7 +1,9 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import * as yup from 'yup';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import jwtAuth from '../../configs/jwt/auth';
 
 const db = admin.firestore();
 
@@ -44,7 +46,6 @@ async function addMenthorData(newData, response) {
     if (areas) {
       await userCollection.doc(userId).update({ areas });
     }
-
     const currentUserType = userType.BOTH;
     await userCollection.doc(userId).update({ userType: currentUserType });
 
@@ -227,12 +228,11 @@ module.exports = {
   // eslint-disable-next-line consistent-return
   async insert(request, response) {
     try {
-      // eslint-disable-next-line radix
-      const flag = parseInt(request.body.userType);
+      const userTypeRequest = parseInt(request.body.userType, 10);
 
-      if (flag === userType.MENTHOR) {
+      if (userTypeRequest === userType.MENTHOR) {
         await newMenthor(request, response);
-      } else if (flag === userType.MENTEE) {
+      } else if (userTypeRequest === userType.MENTEE) {
         await newtMentee(request, response);
       } else {
         return response.status(400).send({
@@ -248,48 +248,51 @@ module.exports = {
 
   async update(request, response) {
     try {
-      const {
-        cpf,
-        flag,
-        email,
-        password,
-        name,
-        linkedin,
-        phone,
-        areas,
-      } = request.body;
-      let image;
-      if (request.file) {
-        image = await resizeImage(request.file);
+      const allDatas = request.body;
+      const idToken = request.tokenId;
+
+      Object.keys(allDatas).forEach((el) => {
+        if (allDatas[el] === null || allDatas[el] === undefined)
+          delete allDatas[el];
+      });
+
+      if (allDatas.email) {
+        if (!yup.string().email().isValidSync(allDatas.email)) {
+          return response
+            .status(400)
+            .send({ error: 'E-mail fora do formato.' });
+        }
+      }
+      if (request.file !== undefined) {
+        const image = await resizeImage(request.file);
+        allDatas.image = image !== allDatas.image ? image : allDatas.image;
       }
 
+      if (allDatas.userType)
+        allDatas.userType = parseInt(allDatas.userType, 10);
+
       const userCollection = db.collection('user');
-
-      const passwordHash = await bcrypt.hash(password, 8);
-
-      const user = await getUser(email);
+      const user = userCollection.doc(idToken);
 
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
-      const newImage = image && image !== user.image ? image : user.image;
+      await userCollection.doc(user.id).update(allDatas);
 
-      await userCollection.doc(user.id).update({
-        password: passwordHash,
-        name,
-        cpf,
-        phone,
-        linkedin,
-        email,
-        userType: flag,
-        image: newImage,
-        areas,
+      return response.status(200).json({
+        token: jwt.sign(
+          {
+            cpf: allDatas.cpf,
+            email: allDatas.email,
+            id: user.id,
+          },
+          jwtAuth.secret,
+          {
+            expiresIn: jwtAuth.expiresIn,
+          }
+        ),
       });
-
-      return response
-        .status(200)
-        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
