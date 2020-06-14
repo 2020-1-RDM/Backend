@@ -23,10 +23,7 @@ async function getMentoringByMenthor(menthorID) {
           });
         });
       });
-    if (!results.length) {
-      return null;
-    }
-    return results;
+    return !results.length ? null : results;
   } catch (e) {
     return null;
   }

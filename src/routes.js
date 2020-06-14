@@ -10,8 +10,6 @@ import upload from './configs/multer/multer';
 
 const routes = new Router();
 
-routes.get('/ping', (req, res) => res.json({ message: 'pong' }));
-
 /*
    Routes of autoconhecimento
  */
@@ -58,7 +56,6 @@ routes.put(
   userController.update
 );
 routes.delete('/users', authMiddleware, userController.delete);
-routes.put('/users/alter', authMiddleware, userController.updateMentee);
 
 /*
     Routes from sessions
