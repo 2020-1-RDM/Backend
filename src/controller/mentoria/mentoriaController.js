@@ -3,9 +3,9 @@ import hbs from 'nodemailer-express-handlebars';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import getFirstDate from '../../helper/firstMetoringHelper';
-import { getUserCredentials } from '../user/userController';
+// eslint-disable-next-line import/named
+import { getUserCredentials, importUser } from '../user/userController';
 import transporter from '../../configs/email/email';
-import { importUser } from '../user/userController';
 
 const db = admin.firestore();
 
@@ -440,6 +440,7 @@ module.exports = {
     }
   },
 
+  // eslint-disable-next-line consistent-return
   async mentoringEvaluation(request, response) {
     try {
       const { title, approved, mentorEmail } = request.body;
@@ -447,23 +448,6 @@ module.exports = {
       let res = null;
 
       const flagDisable = !approved;
-
-      if (flagDisable) {
-        const email = {
-          from: process.env.EMAIL_USER,
-          to: mentorEmail,
-          subject: `Mentoria não Aprovada`,
-          text: `Sua mentoria de título "${title}" não foi aprovada.\nEntre em contato com o administrador para mais detalhes.`,
-        };
-
-        transporter.sendMail(email, (error) => {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('Email enviado com sucesso.');
-          }
-        });
-      }
 
       const mentoringCollection = db.collection('mentoria');
 
@@ -480,7 +464,25 @@ module.exports = {
           res = doc.data();
         });
 
-      return response.status(200).send(res);
+      if (flagDisable) {
+        const email = {
+          from: process.env.EMAIL_USER,
+          to: mentorEmail,
+          subject: `Mentoria não Aprovada`,
+          text: `Sua mentoria de título "${title}" não foi aprovada.\nEntre em contato com o administrador para mais detalhes.`,
+        };
+
+        transporter.sendMail(email, (error) => {
+          if (error) {
+            res.emailStatus = `erro ao enviar email: ${error}`;
+            return response.status(200).send(res);
+          }
+          res.emailStatus = 'email enviado com sucesso';
+          return response.status(200).send(res);
+        });
+      } else {
+        return response.status(200).send(res);
+      }
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar mentoria : ${e}`,
