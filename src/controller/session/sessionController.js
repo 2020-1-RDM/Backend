@@ -17,12 +17,14 @@ module.exports = {
       }
       const userCollection = db.collection('user');
       let result = null;
+      let id = null;
       await userCollection
         .where('email', '==', email)
         .get()
         .then((snapshot) => {
           return snapshot.forEach((res) => {
             result = res.data();
+            id = res.id;
           });
         });
 
@@ -39,6 +41,7 @@ module.exports = {
           {
             cpf: result.cpf,
             email: result.email,
+            id,
           },
           jwtAuth.secret,
           {

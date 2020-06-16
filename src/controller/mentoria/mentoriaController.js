@@ -1,32 +1,14 @@
+import path from 'path';
+import hbs from 'nodemailer-express-handlebars';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import getFirstDate from '../../helper/firstMetoringHelper';
+// eslint-disable-next-line import/named
+import { getUserCredentials, importUser } from '../user/userController';
+import transporter from '../../configs/email/email';
 import getNextDateTime from '../../helper/getNextDateTimeHelper';
 
 const db = admin.firestore();
-
-async function getMentoringByMenthor(menthorID) {
-  try {
-    const mentoringCollection = db.collection('mentoria');
-    const results = [];
-    await mentoringCollection
-      .where('cpf', '==', menthorID)
-      .get()
-      .then((snapshot) => {
-        snapshot.forEach((doc) => {
-          results.push({
-            id: doc.id,
-            data: doc.data(),
-          });
-        });
-      });
-    if (!results.length) {
-      return null;
-    }
-    return results;
-  } catch (e) {
-    return null;
-  }
-}
 
 function checkSameHour(days, hours) {
   let check = false;
@@ -44,14 +26,9 @@ function checkSameHour(days, hours) {
   return check;
 }
 
-async function getMentoringById(id, menthorID) {
-  const mentorings = await getMentoringByMenthor(menthorID);
-  if (!mentorings) {
-    return null;
-  }
-  return mentorings.filter((m) => {
-    return m.id === id;
-  })[0].data;
+async function getMentoringById(id) {
+  const result = db.collection('mentoria').doc(id).get();
+  return result ? result.data : null;
 }
 
 async function getMentoriaByMentoringId(id) {
@@ -80,7 +57,7 @@ async function getMentores() {
 
   const results = [];
   await userCollection
-    .where('userType', '==', 1)
+    .where('userType', '<', 2)
     .get()
     .then((snapshot) => {
       return snapshot.forEach((res) => {
@@ -88,11 +65,67 @@ async function getMentores() {
           cpf: res.data().cpf,
           name: res.data().name,
           image: res.data().image,
+          email: res.data().email,
+        });
+      });
+    });
+
+  await userCollection
+    .where('userType', '>', 2)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        results.push({
+          cpf: res.data().cpf,
+          name: res.data().name,
+          image: res.data().image,
+          email: res.data().email,
         });
       });
     });
 
   return results;
+}
+
+async function triggerEmail(userEmail, datas) {
+  transporter.use(
+    'compile',
+    hbs({
+      viewEngine: {
+        partialsDir: './src/configs/email/views/',
+        defaultLayout: 'email',
+        layoutsDir: './src/configs/email/views/layouts',
+        extName: '.handlebars',
+      },
+      viewPath: path.resolve('./src/configs/email/views/layouts'),
+      extName: '.handlebars',
+    })
+  );
+  const emailConfiguration = {
+    to: userEmail,
+    subject: 'Mentoria agendada.',
+    template: 'email',
+    attachments: [
+      {
+        filename: 'logo_cabecalho.png',
+        path: path.resolve(__dirname, '../../configs/email/logo_cabecalho.png'),
+        cid: 'logo',
+      },
+    ],
+    context: {
+      mentor: datas.mentor,
+      mentorando: datas.mentorando,
+      mentoria: datas.mentoria,
+      data: datas.data,
+      hora: datas.hora,
+      descricao: datas.descMentoria,
+      tipoMentoria: datas.tipoMentoria,
+    },
+  };
+
+  transporter.sendMail(emailConfiguration, (err) => {
+    return !err;
+  });
 }
 
 module.exports = {
@@ -102,7 +135,7 @@ module.exports = {
         title,
         description,
         knowledgeArea,
-        mentoringOption,
+        mentoringOption = [],
         dayOfWeek = [],
         time = [],
       } = request.body;
@@ -147,6 +180,7 @@ module.exports = {
         mentoringOption,
         flagDisable: signalFlag,
         dateTime: date,
+        mentoringApproved: false,
       });
 
       return response.status(200).send({ success: true });
@@ -186,7 +220,7 @@ module.exports = {
     }
   },
 
-  async getAll(request, response) {
+  async getApproved(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
 
@@ -196,6 +230,8 @@ module.exports = {
       const results = [];
       await mentoringCollection
         .where('flagDisable', '==', false)
+        .where('isVisible', '==', true)
+        .where('mentoringApproved', '==', true)
         .get()
         .then((snapshot) => {
           snapshot.forEach((doc) => {
@@ -228,6 +264,52 @@ module.exports = {
           .json({ error: 'Não tem mentorias para serem listadas' });
       }
 
+      return response.status(200).json(results);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
+
+  async getPending(request, response) {
+    try {
+      const userType = await getUserCredentials(request.tokenCpf);
+      if (userType !== 0) {
+        return response.status(401).send('Unauthorized');
+      }
+
+      let i = 0;
+      const mentorInfos = await getMentores();
+
+      const mentoringCollection = db.collection('mentoria');
+      const results = [];
+      await mentoringCollection
+        .where('flagDisable', '==', false)
+        .where('mentoringApproved', '==', false)
+        .get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            const mentorInfo = {
+              name: 'Não encontrado',
+              image: '',
+              email: '',
+            };
+            for (i = 0; i < mentorInfos.length; i += 1) {
+              if (mentorInfos[i].cpf === doc.data().cpf) {
+                mentorInfo.name = mentorInfos[i].name;
+                mentorInfo.image = mentorInfos[i].image;
+                mentorInfo.email = mentorInfos[i].email;
+                break;
+              }
+            }
+            results.push({
+              id: doc.id,
+              data: doc.data(),
+              mentorInfo,
+            });
+          });
+        });
       return response.status(200).json(results);
     } catch (e) {
       return response.status(500).json({
@@ -297,20 +379,70 @@ module.exports = {
     }
   },
 
+  // eslint-disable-next-line consistent-return
+  async mentoringEvaluation(request, response) {
+    try {
+      const { title, approved, mentorEmail } = request.body;
+      const { id } = request.params;
+      let res = null;
+
+      const flagDisable = !approved;
+
+      const mentoringCollection = db.collection('mentoria');
+
+      await mentoringCollection.doc(id).update({
+        title,
+        mentoringApproved: approved,
+        flagDisable,
+      });
+
+      await mentoringCollection
+        .doc(id)
+        .get()
+        .then((doc) => {
+          res = doc.data();
+        });
+
+      if (flagDisable) {
+        const email = {
+          from: process.env.EMAIL_USER,
+          to: mentorEmail,
+          subject: `Mentoria não Aprovada`,
+          text: `Sua mentoria de título "${title}" não foi aprovada.\nEntre em contato com o administrador para mais detalhes.`,
+        };
+
+        transporter.sendMail(email, (error) => {
+          if (error) {
+            res.emailStatus = `erro ao enviar email: ${error}`;
+            return response.status(200).send(res);
+          }
+          res.emailStatus = 'email enviado com sucesso';
+          return response.status(200).send(res);
+        });
+      } else {
+        return response.status(200).send(res);
+      }
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao atualizar mentoria : ${e}`,
+      });
+    }
+  },
+
   async deactivateMentoring(request, response) {
     try {
-      const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthorID);
+      const mentoring = await getMentoringById(id);
       if (!mentoring) {
         return response
           .status(404)
           .send({ error: 'A mentoria não foi encontrada' });
       }
 
-      const flag = {};
-      flag.flagDisable = true;
+      const flag = {
+        flagDisable: true,
+      };
 
       await mentoringCollection.doc(id).update(flag);
 
@@ -324,6 +456,33 @@ module.exports = {
     }
   },
 
+  async changeVisibility(request, response) {
+    try {
+      const mentoringCollection = db.collection('mentoria');
+      const { id } = request.query;
+      const mentoring = (await mentoringCollection.doc(id).get()).data();
+      if (!mentoring)
+        return response.status(404).json({
+          error: `Mentoria não encontrada.`,
+        });
+
+      if (Object.prototype.hasOwnProperty.call(mentoring, 'isVisible'))
+        mentoring.isVisible = !mentoring.isVisible;
+      else mentoring.isVisible = false;
+
+      await mentoringCollection
+        .doc(id)
+        .update({ isVisible: mentoring.isVisible });
+      let finalMessage = 'Mentoria esta invisível';
+      if (mentoring.isVisible) finalMessage = 'Mentoria esta visível';
+      return response.status(200).send({ success: true, msg: finalMessage });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao trocar visibilidade de mentoria : ${e}`,
+      });
+    }
+  },
+
   async choiceMentoring(request, response) {
     try {
       const { typeMentoring, descProject, date, hour } = request.body;
@@ -332,6 +491,7 @@ module.exports = {
       const mentoradoId = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
+
       const mentoring = await getMentoriaByMentoringId(id);
 
       for (let x = 0; x < mentoring.dateTime.length; x += 1) {
@@ -352,6 +512,20 @@ module.exports = {
 
       if (isAvailable) {
         await mentoringCollection.doc(id).update(mentoring);
+        const mentor = (await importUser(mentoring.cpf)).data;
+        const mentorando = (await importUser(mentoradoId)).data;
+        const hora = hour.substring(0, 5);
+        const datas = {
+          mentor: mentor.name,
+          mentorando: mentorando.name,
+          mentoria: mentoring.title,
+          data: date,
+          hora,
+          descMentoria: descProject,
+          tipoMentoria: typeMentoring,
+        };
+        await triggerEmail(mentor.email, datas);
+
         return response.status(200).send({
           success: true,
           msg: 'Inscrição efetuada',

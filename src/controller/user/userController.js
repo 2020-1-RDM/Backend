@@ -1,6 +1,9 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import * as yup from 'yup';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+import jwtAuth from '../../configs/jwt/auth';
 
 const db = admin.firestore();
 
@@ -9,21 +12,6 @@ const userType = {
   MENTEE: 2,
   BOTH: 3,
 };
-
-async function verifyArea(listAreas) {
-  const areasCollection = db.collection('area_conhecimento');
-  const resultArea = [];
-
-  await areasCollection.get().then((snapshot) => {
-    return snapshot.forEach((res) => {
-      resultArea.push(res.data().name.toLowerCase());
-    });
-  });
-
-  if (!resultArea.includes(listAreas.toLowerCase())) {
-    await areasCollection.add({ name: listAreas });
-  }
-}
 
 async function getUser(email) {
   const userCollection = db.collection('user');
@@ -52,15 +40,12 @@ async function addMenthorData(newData, response) {
   try {
     const { linkedin, areas, userId, userCollection } = newData;
 
-    await verifyArea(areas);
-
     if (linkedin) {
       await userCollection.doc(userId).update({ linkedin });
     }
     if (areas) {
       await userCollection.doc(userId).update({ areas });
     }
-
     const currentUserType = userType.BOTH;
     await userCollection.doc(userId).update({ userType: currentUserType });
 
@@ -68,7 +53,7 @@ async function addMenthorData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -86,6 +71,11 @@ async function newMenthor(request, response) {
     const userCollection = db.collection('user');
 
     const user = await getUser(email);
+
+    if (!yup.string().email().isValidSync(email)) {
+      return response.status(400).send({ error: 'E-mail fora do formanto' });
+    }
+
     if (user) {
       // User already exists
 
@@ -107,8 +97,6 @@ async function newMenthor(request, response) {
       // User exists but it's type is different
       return addMenthorData(newData, response);
     }
-
-    verifyArea(areas);
 
     const currentUserType = userType.MENTHOR;
 
@@ -151,7 +139,7 @@ async function addMenteeData(newData, response) {
       .status(200)
       .send({ success: true, msg: 'Usuário atualizado com sucesso' });
   } catch (e) {
-    return response.status.status(500).json({
+    return response.status(500).json({
       error: `Erro ao atualizar usuário : ${e}`,
     });
   }
@@ -240,12 +228,11 @@ module.exports = {
   // eslint-disable-next-line consistent-return
   async insert(request, response) {
     try {
-      // eslint-disable-next-line radix
-      const flag = parseInt(request.body.flag);
+      const userTypeRequest = parseInt(request.body.userType, 10);
 
-      if (flag === userType.MENTHOR) {
+      if (userTypeRequest === userType.MENTHOR) {
         await newMenthor(request, response);
-      } else if (flag === userType.MENTEE) {
+      } else if (userTypeRequest === userType.MENTEE) {
         await newtMentee(request, response);
       } else {
         return response.status(400).send({
@@ -261,50 +248,51 @@ module.exports = {
 
   async update(request, response) {
     try {
-      const {
-        cpf,
-        flag,
-        email,
-        password,
-        name,
-        linkedin,
-        phone,
-        areas,
-      } = request.body;
-      let image;
-      if (request.file) {
-        image = await resizeImage(request.file);
+      const allDatas = request.body;
+      const idToken = request.tokenId;
+
+      Object.keys(allDatas).forEach((el) => {
+        if (allDatas[el] === null || allDatas[el] === undefined)
+          delete allDatas[el];
+      });
+
+      if (allDatas.email) {
+        if (!yup.string().email().isValidSync(allDatas.email)) {
+          return response
+            .status(400)
+            .send({ error: 'E-mail fora do formato.' });
+        }
+      }
+      if (request.file !== undefined) {
+        const image = await resizeImage(request.file);
+        allDatas.image = image !== allDatas.image ? image : allDatas.image;
       }
 
+      if (allDatas.userType)
+        allDatas.userType = parseInt(allDatas.userType, 10);
+
       const userCollection = db.collection('user');
+      const user = userCollection.doc(idToken);
 
-      const passwordHash = await bcrypt.hash(password, 8);
-
-      const user = await getUser(email);
-      const resultArea = [];
       if (!user) {
         return response.status(400).send({ error: 'Usuário não existe.' });
       }
 
-      await verifyArea(areas);
+      await userCollection.doc(user.id).update(allDatas);
 
-      const newImage = image && image !== user.image ? image : user.image;
-
-      await userCollection.doc(user.id).update({
-        password: passwordHash,
-        name,
-        cpf,
-        phone,
-        linkedin,
-        email,
-        userType: flag,
-        image: newImage,
-        areas: resultArea,
+      return response.status(200).json({
+        token: jwt.sign(
+          {
+            cpf: allDatas.cpf,
+            email: allDatas.email,
+            id: user.id,
+          },
+          jwtAuth.secret,
+          {
+            expiresIn: jwtAuth.expiresIn,
+          }
+        ),
       });
-
-      return response
-        .status(200)
-        .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
       return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
@@ -360,7 +348,7 @@ module.exports = {
         .status(200)
         .send({ success: true, msg: 'Usuário atualizado com sucesso' });
     } catch (e) {
-      return response.status.status(500).json({
+      return response.status(500).json({
         error: `Erro ao atualizar usuário : ${e}`,
       });
     }
@@ -391,5 +379,39 @@ module.exports = {
         error: `Erro ao deletar usuário: ${e}`,
       });
     }
+  },
+
+  async importUser(cpf) {
+    const userCollection = db.collection('user');
+    let user = null;
+    await userCollection
+      .where('cpf', '==', cpf)
+      .get()
+      .then((snapshot) => {
+        return snapshot.forEach((res) => {
+          user = {
+            id: res.id,
+            data: res.data(),
+          };
+        });
+      });
+    if (!user) {
+      return null;
+    }
+    return user;
+  },
+
+  async getUserCredentials(userID) {
+    const userCollection = db.collection('user');
+    const results = [];
+    await userCollection
+      .where('cpf', '==', userID)
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+          results.push(doc.data().userType);
+        });
+      });
+    return results[0];
   },
 };
