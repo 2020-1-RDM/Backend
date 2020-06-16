@@ -10,12 +10,10 @@ import upload from './configs/multer/multer';
 
 const routes = new Router();
 
-routes.get('/ping', (req, res) => res.json({ message: 'pong' }));
-
 /*
    Routes of autoconhecimento
  */
-routes.get('/areasDisponiveis', authMiddleware, knowledgeAreasController.get);
+routes.get('/areasDisponiveis', knowledgeAreasController.get);
 routes.get(
   '/areaConhecimento',
   authMiddleware,
@@ -58,7 +56,6 @@ routes.put(
   userController.update
 );
 routes.delete('/users', authMiddleware, userController.delete);
-routes.put('/users/alter', authMiddleware, userController.updateMentee);
 
 /*
     Routes from sessions
@@ -74,17 +71,25 @@ routes.post(
   authMiddleware,
   mentoriaController.insert
 );
-routes.get('/mentoriaAll', authMiddleware, mentoriaController.getAll);
+routes.get('/mentoriaAll', authMiddleware, mentoriaController.getApproved);
 routes.get(
   '/mentoriaSession',
   authMiddleware,
   mentoriaController.getMentoringBySession
 );
+routes.get('/pendingMentorings', authMiddleware, mentoriaController.getPending);
+
 routes.put(
   '/mentoria/alter/:id',
   upload.single('image'),
   authMiddleware,
   mentoriaController.updateMentoring
+);
+
+routes.put(
+  '/mentoria/evaluate/:id',
+  authMiddleware,
+  mentoriaController.mentoringEvaluation
 );
 
 routes.put(
@@ -103,5 +108,4 @@ routes.put(
   authMiddleware,
   mentoriaController.choiceMentoring
 );
-
 export default routes;
