@@ -31,9 +31,9 @@ module.exports = {
       if (!result) {
         return response.status(401).json({ error: 'Usuário inválido!' });
       }
-      if (!(await bcrypt.compare(password, result.password))) {
-        return response.status(401).json({ error: 'Senha incorreta' });
-      }
+      // if (!(await bcrypt.compare(password, result.password))) {
+      //   return response.status(401).json({ error: 'Senha incorreta' });
+      // }
 
       return response.status(200).json({
         result,

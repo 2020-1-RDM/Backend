@@ -6,6 +6,7 @@ import getFirstDate from '../../helper/firstMetoringHelper';
 // eslint-disable-next-line import/named
 import { getUserCredentials, importUser } from '../user/userController';
 import transporter from '../../configs/email/email';
+import getNextDateTime from '../../helper/getNextDateTimeHelper';
 
 const db = admin.firestore();
 
@@ -148,9 +149,9 @@ module.exports = {
       const mentoringCollection = db.collection('mentoria');
 
       // controls the number of weeks to be scheduled
-      const weeksController = 4;
+
       const dates = [];
-      let k = 0;
+      // let k = 0;
       let days = [];
       let hours = [];
 
@@ -168,38 +169,7 @@ module.exports = {
         hours = time;
       }
 
-      for (let i = 0; i < days.length; i += 1) {
-        const currentDate = new Date();
-
-        // eslint-disable-next-line no-await-in-loop
-        let sumForFirstDay = await getFirstDate(days[i], currentDate);
-
-        for (let j = 0; j < weeksController; j += 1) {
-          if (j !== 0) {
-            sumForFirstDay = 7;
-          }
-          currentDate.setDate(currentDate.getDate() + sumForFirstDay);
-
-          const mentoringDay = `${currentDate.getDate()}/${
-            currentDate.getMonth() + 1
-          }/${currentDate.getFullYear()}`;
-
-          dates[k] = {
-            day: days[i],
-            dayOfTheMonth: mentoringDay,
-            times: [
-              {
-                hour: hours[i],
-                flagBusy: false,
-                typeMentoring: null,
-                descProject: null,
-                mentoradoId: null,
-              },
-            ],
-          };
-          k += 1;
-        }
-      }
+      const date = await getNextDateTime(dates, days, hours);
 
       await mentoringCollection.add({
         image,
@@ -209,7 +179,7 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         flagDisable: signalFlag,
-        dateTime: dates,
+        dateTime: date,
         mentoringApproved: false,
       });
 
@@ -350,55 +320,57 @@ module.exports = {
 
   async updateMentoring(request, response) {
     try {
-      const {
-        title,
-        description,
-        knowledgeArea,
-        mentoringOption,
-        dayOfWeek,
-        time,
-      } = request.body;
-      let image;
-      if (request.file) {
-        image = await resizeImage(request.file);
-      }
+      const allDatas = request.body;
+      const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id);
+      const mentoring = await getMentoringById(id, menthorID);
+
       if (!mentoring) {
         return response
           .status(404)
           .send({ error: 'A mentoria não foi encontrada' });
       }
 
-      const update = {};
-      update.title =
-        title && title !== mentoring.title ? title : mentoring.title;
-      update.description =
-        description && description !== mentoring.description
-          ? description
-          : mentoring.description;
-      update.knowledgeArea =
-        knowledgeArea && knowledgeArea !== mentoring.knowledgeArea
-          ? knowledgeArea
-          : mentoring.knowledgeArea;
-      update.mentoringOption =
-        mentoringOption && mentoringOption !== mentoring.mentoringOption
-          ? mentoringOption
-          : mentoring.mentoringOption;
-      update.dayOfWeek =
-        dayOfWeek && dayOfWeek !== mentoring.dayOfWeek
-          ? dayOfWeek
-          : mentoring.dayOfWeek;
-      update.time = time && time !== mentoring.time ? time : mentoring.time;
-      update.image =
-        image && image !== mentoring.image ? image : mentoring.image;
-      await mentoringCollection.doc(id).update(update);
+      Object.keys(allDatas).forEach((el) => {
+        if (allDatas[el] === null || allDatas[el] === undefined)
+          delete allDatas[el];
+      });
+
+      if (request.file !== undefined) {
+        const image = await resizeImage(request.file);
+        allDatas.image = image !== allDatas.image ? image : allDatas.image;
+      } else if (!allDatas.image) {
+        delete allDatas.image;
+      }
+
+      const dayOfWeek = allDatas.dayOfWeek;
+      const time = allDatas.time;
+
+      const dates = [];
+      let days = [];
+      let hours = [];
+
+      if (!Array.isArray(dayOfWeek)) {
+        days.push(dayOfWeek);
+        hours.push(time);
+      } else {
+        if (checkSameHour(dayOfWeek, time)) {
+          return response
+            .status(400)
+            .json({ error: 'Foram selecionado dias e horários iguais!' });
+        }
+        days = dayOfWeek;
+        hours = time;
+      }
+
+      allDatas.dateTime = await getNextDateTime(dates, days, hours);
+      await mentoringCollection.doc(id).update(allDatas);
 
       return response.status(200).send({
         success: true,
         msg: 'Mentoria atualizada com sucesso',
-        data: update,
+        data: allDatas,
       });
     } catch (e) {
       return response.status(500).json({
