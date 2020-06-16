@@ -71,18 +71,27 @@ routes.post(
   authMiddleware,
   mentoriaController.insert
 );
-routes.get('/mentoriaAll', authMiddleware, mentoriaController.getAll);
+routes.get('/mentoriaAll', authMiddleware, mentoriaController.getApproved);
 routes.get(
   '/mentoriaSession',
   authMiddleware,
   mentoriaController.getMentoringBySession
 );
+routes.get('/pendingMentorings', authMiddleware, mentoriaController.getPending);
+
 routes.put(
   '/mentoria/alter/:id',
   upload.single('image'),
   authMiddleware,
   mentoriaController.updateMentoring
 );
+
+routes.put(
+  '/mentoria/evaluate/:id',
+  authMiddleware,
+  mentoriaController.mentoringEvaluation
+);
+
 routes.delete(
   '/mentoria/deactivate/:id',
   authMiddleware,
