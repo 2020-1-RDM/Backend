@@ -92,6 +92,12 @@ routes.put(
   mentoriaController.mentoringEvaluation
 );
 
+routes.put(
+  '/mentoria/changeVisibility/',
+  authMiddleware,
+  mentoriaController.changeVisibility
+);
+
 routes.delete(
   '/mentoria/deactivate/:id',
   authMiddleware,

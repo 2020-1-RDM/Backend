@@ -9,27 +9,6 @@ import transporter from '../../configs/email/email';
 
 const db = admin.firestore();
 
-async function getMentoringByMenthor(menthorID) {
-  try {
-    const mentoringCollection = db.collection('mentoria');
-    const results = [];
-    await mentoringCollection
-      .where('cpf', '==', menthorID)
-      .get()
-      .then((snapshot) => {
-        snapshot.forEach((doc) => {
-          results.push({
-            id: doc.id,
-            data: doc.data(),
-          });
-        });
-      });
-    return !results.length ? null : results;
-  } catch (e) {
-    return null;
-  }
-}
-
 function checkSameHour(days, hours) {
   let check = false;
   days.forEach((element, index) =>
@@ -46,14 +25,9 @@ function checkSameHour(days, hours) {
   return check;
 }
 
-async function getMentoringById(id, menthorID) {
-  const mentorings = await getMentoringByMenthor(menthorID);
-  if (!mentorings) {
-    return null;
-  }
-  return mentorings.filter((m) => {
-    return m.id === id;
-  })[0].data;
+async function getMentoringById(id) {
+  const result = db.collection('mentoria').doc(id).get();
+  return result ? result.data : null;
 }
 
 async function getMentoriaByMentoringId(id) {
@@ -286,6 +260,7 @@ module.exports = {
       const results = [];
       await mentoringCollection
         .where('flagDisable', '==', false)
+        .where('isVisible', '==', true)
         .where('mentoringApproved', '==', true)
         .get()
         .then((snapshot) => {
@@ -387,10 +362,9 @@ module.exports = {
       if (request.file) {
         image = await resizeImage(request.file);
       }
-      const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthorID);
+      const mentoring = await getMentoringById(id);
       if (!mentoring) {
         return response
           .status(404)
@@ -419,7 +393,6 @@ module.exports = {
       update.time = time && time !== mentoring.time ? time : mentoring.time;
       update.image =
         image && image !== mentoring.image ? image : mentoring.image;
-
       await mentoringCollection.doc(id).update(update);
 
       return response.status(200).send({
@@ -486,18 +459,18 @@ module.exports = {
 
   async deactivateMentoring(request, response) {
     try {
-      const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthorID);
+      const mentoring = await getMentoringById(id);
       if (!mentoring) {
         return response
           .status(404)
           .send({ error: 'A mentoria não foi encontrada' });
       }
 
-      const flag = {};
-      flag.flagDisable = true;
+      const flag = {
+        flagDisable: true,
+      };
 
       await mentoringCollection.doc(id).update(flag);
 
@@ -510,6 +483,34 @@ module.exports = {
       });
     }
   },
+
+  async changeVisibility(request, response) {
+    try {
+      const mentoringCollection = db.collection('mentoria');
+      const { id } = request.query;
+      const mentoring = (await mentoringCollection.doc(id).get()).data();
+      if (!mentoring)
+        return response.status(404).json({
+          error: `Mentoria não encontrada.`,
+        });
+
+      if (Object.prototype.hasOwnProperty.call(mentoring, 'isVisible'))
+        mentoring.isVisible = !mentoring.isVisible;
+      else mentoring.isVisible = false;
+
+      await mentoringCollection
+        .doc(id)
+        .update({ isVisible: mentoring.isVisible });
+      let finalMessage = 'Mentoria esta invisível';
+      if (mentoring.isVisible) finalMessage = 'Mentoria esta visível';
+      return response.status(200).send({ success: true, msg: finalMessage });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro ao trocar visibilidade de mentoria : ${e}`,
+      });
+    }
+  },
+
   async choiceMentoring(request, response) {
     try {
       const { typeMentoring, descProject, date, hour } = request.body;
