@@ -28,8 +28,8 @@ function checkSameHour(days, hours) {
 }
 
 async function getMentoringById(id) {
-  const result = db.collection('mentoria').doc(id).get();
-  return result ? result.data : null;
+  const result = (await db.collection('mentoria').doc(id).get()).data();
+  return result;
 }
 
 async function getMentoriaByMentoringId(id) {
@@ -323,10 +323,9 @@ module.exports = {
   async updateMentoring(request, response) {
     try {
       const allDatas = request.body;
-      const menthorID = request.tokenCpf;
       const { id } = request.params;
       const mentoringCollection = db.collection('mentoria');
-      const mentoring = await getMentoringById(id, menthorID);
+      const mentoring = await getMentoringById(id);
 
       if (!mentoring) {
         return response
