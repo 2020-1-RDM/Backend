@@ -266,7 +266,6 @@ module.exports = {
       }
 
       const validResults = await checkValidDates(results);
-      console.log(validResults);
 
       return response.status(200).json(validResults);
     } catch (e) {
