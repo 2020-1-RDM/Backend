@@ -2,6 +2,7 @@ import path from 'path';
 import hbs from 'nodemailer-express-handlebars';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
+// eslint-disable-next-line no-unused-vars
 import getFirstDate from '../../helper/firstMetoringHelper';
 // eslint-disable-next-line import/named
 import { getUserCredentials, importUser } from '../user/userController';
@@ -179,6 +180,7 @@ module.exports = {
         knowledgeArea,
         mentoringOption,
         flagDisable: signalFlag,
+        isVisible: true,
         dateTime: date,
         mentoringApproved: false,
       });
@@ -344,8 +346,8 @@ module.exports = {
         delete allDatas.image;
       }
 
-      const dayOfWeek = allDatas.dayOfWeek;
-      const time = allDatas.time;
+      const { dayOfWeek } = allDatas;
+      const { time } = allDatas;
 
       const dates = [];
       let days = [];
