@@ -12,9 +12,7 @@ async function checkValidDates(mentorings) {
         formattedDate[1] - 1,
         formattedDate[0]
       );
-    //   console.log(
-    //     `Data na mentoria: ${dateTime.dayOfTheMonth}\n${mentoringDate} >= ${currentDate}? ${mentoringDate >= currentDate}`
-    //   );
+
       if (mentoringDate >= currentDate) {
         validDates.push(dateTime);
       }
