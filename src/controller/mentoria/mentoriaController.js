@@ -7,6 +7,7 @@ import getFirstDate from '../../helper/firstMetoringHelper';
 import { getUserCredentials, importUser } from '../user/userController';
 import transporter from '../../configs/email/email';
 import getNextDateTime from '../../helper/getNextDateTimeHelper';
+import checkValidDates from '../../helper/checkValidDates';
 
 const db = admin.firestore();
 
@@ -264,7 +265,10 @@ module.exports = {
           .json({ error: 'Não tem mentorias para serem listadas' });
       }
 
-      return response.status(200).json(results);
+      const validResults = await checkValidDates(results);
+      console.log(validResults);
+
+      return response.status(200).json(validResults);
     } catch (e) {
       return response.status(500).json({
         error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
