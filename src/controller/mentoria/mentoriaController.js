@@ -28,7 +28,7 @@ function checkSameHour(days, hours) {
 }
 
 async function getMentoringById(id) {
-  const result = db.collection('mentoria').doc(id).get();
+  const result = await db.collection('mentoria').doc(id).get();
   return result ? result.data : null;
 }
 
