@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import jwtAuth from '../../configs/jwt/auth';
+import transporter from '../../configs/email/email';
 
 const db = admin.firestore();
 
@@ -413,5 +414,49 @@ module.exports = {
         });
       });
     return results[0];
+  },
+
+  async sendVerificationEmail(request, response) {
+    try {
+      const { email } = request.body;
+
+      let userID = null;
+
+      const url = process.env.ROOT_URL || 'localhost:8080';
+
+      const userCollection = db.collection('user');
+
+      await userCollection
+        .where('email', '==', email)
+        .limit(1)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.empty) {
+            response
+              .status(404)
+              .send(`não foi encontrado um usuário com o email ${email}`);
+          }
+          snapshot.forEach((doc) => {
+            userID = doc.id;
+          });
+        });
+      const emailSettings = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Recuperação de senha`,
+        text: `Você solicitou uma nova senha. Clique no link abaixo para defini-la:\nhttp://${url}/nova-senha/${userID}`,
+      };
+
+      transporter.sendMail(emailSettings, (error) => {
+        if (error) {
+          return response.status(400).send(`erro ao enviar email: ${error}`);
+        }
+        return response
+          .status(200)
+          .send(`email enviado com sucesso para ${email}`);
+      });
+    } catch (e) {
+      response.status(500).send(`erro ao enviar nova senha ${e}`);
+    }
   },
 };
