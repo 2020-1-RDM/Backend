@@ -484,7 +484,7 @@ module.exports = {
             }
           }
           response.status(401).send({
-            message: 'solicitação de troca de senha inválida',
+            message: 'Solicitação de troca de senha inválida',
           });
           return false;
         })
@@ -503,7 +503,7 @@ module.exports = {
       });
 
       return response
-        .status(200)
+        .status(202)
         .send({ success: true, msg: 'Senha atualizada com sucesso' });
     } catch (e) {
       return response
