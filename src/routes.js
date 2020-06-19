@@ -50,6 +50,7 @@ routes.post(
 routes.get('/users', authMiddleware, userController.get);
 routes.post('/users', upload.single('image'), userController.insert);
 routes.post('/passwordRecuperationLink', userController.sendVerificationEmail);
+routes.put('/setPassword/', userController.updatePassword);
 routes.put(
   '/users',
   upload.single('image'),
