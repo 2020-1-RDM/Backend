@@ -430,6 +430,19 @@ module.exports = {
           .status(404)
           .send(`não foi encontrado um usuário com o email ${email}`);
       }
+
+      const userCollection = db.collection('user');
+
+      const passwordRequirementExpiration = new Date();
+
+      passwordRequirementExpiration.setDate(
+        passwordRequirementExpiration.getDate() + 1
+      );
+
+      await userCollection.doc(user.id).update({
+        passwordRequirementExpiration,
+      });
+
       const emailSettings = {
         from: process.env.EMAIL_USER,
         to: email,
@@ -458,13 +471,44 @@ module.exports = {
 
       const userCollection = db.collection('user');
 
-      await userCollection.doc(id).update({ password: passwordHash });
+      const currentDate = new Date();
+
+      const validDate = await userCollection
+        .doc(id)
+        .get()
+        .then((doc) => {
+          if (doc.data().passwordRequirementExpiration) {
+            const dbDate = doc.data().passwordRequirementExpiration.toDate();
+            if (dbDate > currentDate) {
+              return true;
+            }
+          }
+          response.status(401).send({
+            message: 'solicitação de troca de senha inválida',
+          });
+          return false;
+        })
+        .catch((error) => {
+          return response
+            .status(404)
+            .send({ message: `usuário não encontrado: ${error}` });
+        });
+      if (!validDate) {
+        return response;
+      }
+
+      await userCollection.doc(id).update({
+        password: passwordHash,
+        passwordRequirementExpiration: null,
+      });
 
       return response
         .status(200)
         .send({ success: true, msg: 'Senha atualizada com sucesso' });
     } catch (e) {
-      return response.status(500).send({ error: e });
+      return response
+        .status(500)
+        .send({ error: `erro ao processar a requisição. ${e}` });
     }
   },
 };
