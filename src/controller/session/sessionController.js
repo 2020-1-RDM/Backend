@@ -42,6 +42,7 @@ module.exports = {
             cpf: result.cpf,
             email: result.email,
             id,
+            userType: result.userType,
           },
           jwtAuth.secret,
           {

@@ -8,6 +8,7 @@ import jwtAuth from '../../configs/jwt/auth';
 const db = admin.firestore();
 
 const userType = {
+  ADMIN: 0,
   MENTHOR: 1,
   MENTEE: 2,
   BOTH: 3,
@@ -225,6 +226,33 @@ module.exports = {
       });
     }
   },
+  async getAll(request, response) {
+    try {
+      const currentUserType = await getUser(request.userType);
+      if (currentUserType !== userType.ADMIN) {
+        const allUsers = [];
+        await db
+          .collection('user')
+          .get()
+          .then((snapshot) => {
+            return snapshot.forEach((res) => {
+              allUsers.push({
+                id: res.id,
+                data: res.data(),
+              });
+            });
+          });
+        return response.status(200).json(allUsers);
+      }
+      return response.status(405).json({
+        error: `Não é possível realizar essa operação para esse usuário`,
+      });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de usuários. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
   // eslint-disable-next-line consistent-return
   async insert(request, response) {
     try {
@@ -286,6 +314,7 @@ module.exports = {
             cpf: allDatas.cpf,
             email: allDatas.email,
             id: user.id,
+            userType: user.userType,
           },
           jwtAuth.secret,
           {
