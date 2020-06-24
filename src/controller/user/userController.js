@@ -228,8 +228,8 @@ module.exports = {
   },
   async getAll(request, response) {
     try {
-      const currentUserType = await getUser(request.userType);
-      if (currentUserType !== userType.ADMIN) {
+      const currentUserType = request.userType;
+      if (currentUserType === userType.ADMIN) {
         const allUsers = [];
         await db
           .collection('user')
@@ -309,7 +309,7 @@ module.exports = {
       await userCollection.doc(user.id).update(allDatas);
 
       return response.status(200).json({
-        token: jwt.sign(
+        token:  (
           {
             cpf: allDatas.cpf,
             email: allDatas.email,
