@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import * as yup from 'yup';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
@@ -228,8 +227,7 @@ module.exports = {
   },
   async getAll(request, response) {
     try {
-      const currentUserType = request.userType;
-      if (currentUserType === userType.ADMIN) {
+      if (parseInt(request.tokenUserType, 10) === userType.ADMIN) {
         const allUsers = [];
         await db
           .collection('user')
@@ -309,8 +307,8 @@ module.exports = {
       await userCollection.doc(user.id).update(allDatas);
 
       return response.status(200).json({
-        token:  (
-          {
+        token:
+          ({
             cpf: allDatas.cpf,
             email: allDatas.email,
             id: user.id,
@@ -319,8 +317,7 @@ module.exports = {
           jwtAuth.secret,
           {
             expiresIn: jwtAuth.expiresIn,
-          }
-        ),
+          }),
       });
     } catch (e) {
       return response.status(500).json({
