@@ -228,6 +228,7 @@ module.exports = {
 
       let i = 0;
       const mentorInfos = await getMentores();
+      let userFound = false;
 
       const results = [];
       await mentoringCollection
@@ -239,9 +240,16 @@ module.exports = {
           snapshot.forEach((doc) => {
             for (i = 0; i < mentorInfos.length; i += 1) {
               if (mentorInfos[i].cpf === doc.data().cpf) {
+                userFound = true;
                 break;
               }
             }
+
+            if (!userFound) {
+              mentorInfos[i].name = 'Usuário não encontrado';
+              mentorInfos[i].image = '';
+            }
+
             results.push({
               idMentoria: doc.id,
               cpf: doc.data().cpf,
