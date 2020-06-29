@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import * as yup from 'yup';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
@@ -9,6 +8,7 @@ import transporter from '../../configs/email/email';
 const db = admin.firestore();
 
 const userType = {
+  ADMIN: 0,
   MENTHOR: 1,
   MENTEE: 2,
   BOTH: 3,
@@ -226,6 +226,32 @@ module.exports = {
       });
     }
   },
+  async getAll(request, response) {
+    try {
+      if (parseInt(request.tokenUserType, 10) === userType.ADMIN) {
+        const allUsers = [];
+        await db
+          .collection('user')
+          .get()
+          .then((snapshot) => {
+            return snapshot.forEach((res) => {
+              allUsers.push({
+                id: res.id,
+                data: res.data(),
+              });
+            });
+          });
+        return response.status(200).json(allUsers);
+      }
+      return response.status(405).json({
+        error: `Não é possível realizar essa operação para esse usuário`,
+      });
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de usuários. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
   // eslint-disable-next-line consistent-return
   async insert(request, response) {
     try {
@@ -282,17 +308,17 @@ module.exports = {
       await userCollection.doc(user.id).update(allDatas);
 
       return response.status(200).json({
-        token: jwt.sign(
-          {
+        token:
+          ({
             cpf: allDatas.cpf,
             email: allDatas.email,
             id: user.id,
+            userType: user.userType,
           },
           jwtAuth.secret,
           {
             expiresIn: jwtAuth.expiresIn,
-          }
-        ),
+          }),
       });
     } catch (e) {
       return response.status(500).json({

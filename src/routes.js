@@ -48,6 +48,8 @@ routes.post(
     Routes of users
  */
 routes.get('/users', authMiddleware, userController.get);
+routes.get('/allUsers', authMiddleware, userController.getAll);
+
 routes.post('/users', upload.single('image'), userController.insert);
 routes.post('/passwordRecuperationLink', userController.sendVerificationEmail);
 routes.post('/setPassword/', userController.updatePassword);
