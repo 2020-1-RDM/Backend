@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import admin from '../../configs/database/connection';
 import resizeImage from '../../helper/resizeImageHelper';
 import jwtAuth from '../../configs/jwt/auth';
+import transporter from '../../configs/email/email';
 
 const db = admin.firestore();
 
@@ -413,5 +414,101 @@ module.exports = {
         });
       });
     return results[0];
+  },
+
+  // eslint-disable-next-line consistent-return
+  async sendVerificationEmail(request, response) {
+    try {
+      const { email } = request.body;
+
+      const url = process.env.ROOT_URL || 'localhost:8080';
+
+      const user = await getUser(email);
+
+      if (!user) {
+        return response
+          .status(404)
+          .send(`não foi encontrado um usuário com o email ${email}`);
+      }
+
+      const userCollection = db.collection('user');
+
+      const passwordRequirementExpiration = new Date();
+
+      passwordRequirementExpiration.setDate(
+        passwordRequirementExpiration.getDate() + 1
+      );
+
+      await userCollection.doc(user.id).update({
+        passwordRequirementExpiration,
+      });
+
+      const emailSettings = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Recuperação de senha`,
+        text: `Você solicitou uma nova senha. Clique no link abaixo para defini-la:\nhttp://${url}/nova-senha/${user.id}`,
+      };
+
+      transporter.sendMail(emailSettings, (error) => {
+        if (error) {
+          return response.status(400).send(`erro ao enviar email: ${error}`);
+        }
+        return response
+          .status(200)
+          .send(`email enviado com sucesso para ${email}`);
+      });
+    } catch (e) {
+      response.status(500).send(`erro ao processar requisição: ${e}`);
+    }
+  },
+
+  async updatePassword(request, response) {
+    try {
+      const { id, newPassword } = request.body;
+
+      const passwordHash = await bcrypt.hash(newPassword, 8);
+
+      const userCollection = db.collection('user');
+
+      const currentDate = new Date();
+
+      const validDate = await userCollection
+        .doc(id)
+        .get()
+        .then((doc) => {
+          if (doc.data().passwordRequirementExpiration) {
+            const dbDate = doc.data().passwordRequirementExpiration.toDate();
+            if (dbDate > currentDate) {
+              return true;
+            }
+          }
+          response.status(401).send({
+            message: 'Solicitação de troca de senha inválida',
+          });
+          return false;
+        })
+        .catch((error) => {
+          return response
+            .status(404)
+            .send({ message: `usuário não encontrado: ${error}` });
+        });
+      if (!validDate) {
+        return response;
+      }
+
+      await userCollection.doc(id).update({
+        password: passwordHash,
+        passwordRequirementExpiration: null,
+      });
+
+      return response
+        .status(202)
+        .send({ success: true, msg: 'Senha atualizada com sucesso' });
+    } catch (e) {
+      return response
+        .status(500)
+        .send({ error: `erro ao processar a requisição. ${e}` });
+    }
   },
 };
