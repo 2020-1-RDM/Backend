@@ -470,7 +470,7 @@ module.exports = {
       });
 
       const emailSettings = {
-        from: process.env.EMAIL_USER,
+        from: process.env.EMAIL_ACCOUNT,
         to: email,
         subject: `Recuperação de senha`,
         text: `Você solicitou uma nova senha. Clique no link abaixo para defini-la:\nhttp://${url}/nova-senha/${user.id}`,
