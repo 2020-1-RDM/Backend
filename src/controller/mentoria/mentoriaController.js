@@ -87,6 +87,26 @@ async function getMentores() {
 
   return results;
 }
+async function getMentorByCPF(cpf) {
+  const userCollection = db.collection('user');
+  const results = [];
+
+  await userCollection
+    .where('cpf', '==', cpf)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        results.push({
+          cpf: res.data().cpf,
+          name: res.data().name,
+          image: res.data().image,
+          email: res.data().email,
+        });
+      });
+    });
+
+  return results[0];
+}
 
 async function triggerEmail(userEmail, datas) {
   transporter.use(
@@ -218,6 +238,28 @@ module.exports = {
     } catch (e) {
       return response.status(500).json({
         error: `Erro durante o processamento de busca de mentorias. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
+
+  async getMentoring(request, response) {
+    try {
+      const { id } = request.params;
+      const apiResult = await db.collection('mentoria').doc(id).get();
+      const result = apiResult.data();
+      result.id = id;
+      const mentorInfo = await getMentorByCPF(result.cpf);
+      result.mentorInfos = mentorInfo;
+      if (!result) {
+        return response
+          .status(400)
+          .json({ error: 'Não foi encontrado essa mentoria' });
+      }
+
+      return response.status(200).json(result);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de mentoria. Espere um momento e tente novamente! Erro : ${e}`,
       });
     }
   },

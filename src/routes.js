@@ -81,6 +81,13 @@ routes.get(
   authMiddleware,
   mentoriaController.getMentoringBySession
 );
+
+routes.get(
+  '/mentoria/:id',
+  authMiddleware,
+  mentoriaController.getMentoring
+);
+
 routes.get('/pendingMentorings', authMiddleware, mentoriaController.getPending);
 
 routes.put(
