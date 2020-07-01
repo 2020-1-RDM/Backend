@@ -394,28 +394,63 @@ module.exports = {
       } else if (!allDatas.image) {
         delete allDatas.image;
       }
-
-      const { dayOfWeek } = allDatas;
-      const { time } = allDatas;
-
-      const dates = [];
-      let days = [];
-      let hours = [];
-
-      if (!Array.isArray(dayOfWeek)) {
-        days.push(dayOfWeek);
-        hours.push(time);
+      if (Array.isArray(allDatas.dayOfWeek)) {
+        console.log('here');
+        mentoring.dateTime.forEach((element) => {
+          for (let i = 0; i < allDatas.dayOfWeek.length; i += 1) {
+            if (
+              allDatas.dayOfWeek[i] === element.day &&
+              allDatas.time[i] === element.times[0].hour
+            ) {
+              allDatas.dayOfWeek.splice(i, 1);
+              allDatas.time.splice(i, 1);
+            }
+            console.log('\nelement');
+            console.log(element.day);
+            console.log(element.times[0].hour);
+            console.log('\nalldatas');
+            console.log(allDatas.dayOfWeek[i]);
+            console.log(allDatas.time[i]);
+          }
+        });
       } else {
-        if (checkSameHour(dayOfWeek, time)) {
-          return response
-            .status(400)
-            .json({ error: 'Foram selecionado dias e horários iguais!' });
-        }
-        days = dayOfWeek;
-        hours = time;
+        mentoring.dateTime.forEach((element) => {
+          if (
+            allDatas.dayOfWeek === element.day &&
+            allDatas.time === element.times[0].hour
+          ) {
+            delete allDatas.dayOfWeek;
+            delete allDatas.time;
+          }
+        });
       }
 
-      allDatas.dateTime = await getNextDateTime(dates, days, hours);
+      if (allDatas.dayOfWeek) {
+        const { dayOfWeek } = allDatas;
+        const { time } = allDatas;
+
+        const dates = [];
+        let days = [];
+        let hours = [];
+
+        if (!Array.isArray(dayOfWeek)) {
+          days.push(dayOfWeek);
+          hours.push(time);
+        } else {
+          if (checkSameHour(dayOfWeek, time)) {
+            return response
+              .status(400)
+              .json({ error: 'Foram selecionado dias e horários iguais!' });
+          }
+          days = dayOfWeek;
+          hours = time;
+        }
+        allDatas.dateTime = await getNextDateTime(dates, days, hours);
+        for (let i = 0; i < mentoring.dateTime.length; i += 1)
+          allDatas.dateTime.push(mentoring.dateTime[i]);
+        if (allDatas.dayOfWeek) delete allDatas[dayOfWeek];
+        if (allDatas.time) delete allDatas[time];
+      }
       await mentoringCollection.doc(id).update(allDatas);
 
       return response.status(200).send({
