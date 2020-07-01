@@ -15,6 +15,7 @@ export default async (req, res, next) => {
     req.tokenCpf = decoded.cpf;
     req.tokenEmail = decoded.email;
     req.tokenId = decoded.id;
+    req.tokenUserType = decoded.userType
     next();
   } catch (err) {
     return res.status(400).json({ message: 'Token invalid' });

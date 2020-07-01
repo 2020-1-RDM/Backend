@@ -87,6 +87,26 @@ async function getMentores() {
 
   return results;
 }
+async function getMentorByCPF(cpf) {
+  const userCollection = db.collection('user');
+  const results = [];
+
+  await userCollection
+    .where('cpf', '==', cpf)
+    .get()
+    .then((snapshot) => {
+      return snapshot.forEach((res) => {
+        results.push({
+          cpf: res.data().cpf,
+          name: res.data().name,
+          image: res.data().image,
+          email: res.data().email,
+        });
+      });
+    });
+
+  return results[0];
+}
 
 async function triggerEmail(userEmail, datas) {
   transporter.use(
@@ -222,12 +242,35 @@ module.exports = {
     }
   },
 
+  async getMentoring(request, response) {
+    try {
+      const { id } = request.params;
+      const apiResult = await db.collection('mentoria').doc(id).get();
+      const result = apiResult.data();
+      result.id = id;
+      const mentorInfo = await getMentorByCPF(result.cpf);
+      result.mentorInfos = mentorInfo;
+      if (!result) {
+        return response
+          .status(400)
+          .json({ error: 'Não foi encontrado essa mentoria' });
+      }
+
+      return response.status(200).json(result);
+    } catch (e) {
+      return response.status(500).json({
+        error: `Erro durante o processamento de busca de mentoria. Espere um momento e tente novamente! Erro : ${e}`,
+      });
+    }
+  },
+
   async getApproved(request, response) {
     try {
       const mentoringCollection = db.collection('mentoria');
 
       let i = 0;
       const mentorInfos = await getMentores();
+      let userFound = false;
 
       const results = [];
       await mentoringCollection
@@ -239,9 +282,16 @@ module.exports = {
           snapshot.forEach((doc) => {
             for (i = 0; i < mentorInfos.length; i += 1) {
               if (mentorInfos[i].cpf === doc.data().cpf) {
+                userFound = true;
                 break;
               }
             }
+
+            if (!userFound) {
+              mentorInfos[i].name = 'Usuário não encontrado';
+              mentorInfos[i].image = '';
+            }
+
             results.push({
               idMentoria: doc.id,
               cpf: doc.data().cpf,
