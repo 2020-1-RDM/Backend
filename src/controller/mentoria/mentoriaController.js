@@ -456,7 +456,7 @@ module.exports = {
 
       if (flagDisable) {
         const email = {
-          from: process.env.EMAIL_USER,
+          from: process.env.EMAIL_ACCOUNT,
           to: mentorEmail,
           subject: `Mentoria não Aprovada`,
           text: `Sua mentoria de título "${title}" não foi aprovada.\nEntre em contato com o administrador para mais detalhes.`,
